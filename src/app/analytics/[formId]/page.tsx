@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  BarChart3, Loader2, ArrowLeft, RefreshCw, Sparkles, Download, 
+import {
+  BarChart3, Loader2, ArrowLeft, RefreshCw, Sparkles, Download,
   MessageSquare, Users, Percent, Clock, ChevronRight, Play, Send, Bot, User
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [responses, setResponses] = useState<Response[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  
+
   // AI analysis states
   const [analyzingQuestionId, setAnalyzingQuestionId] = useState<string | null>(null);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<{ [qId: string]: any }>({});
@@ -61,12 +61,12 @@ export default function AnalyticsPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      
+
       // Load form details
       const formRes = await fetch(`/api/forms?id=${formId}`);
       const formData = await formRes.json();
       if (!formRes.ok) throw new Error(formData.error);
-      
+
       setFormTitle(formData.form.title);
       setQuestions(formData.questions || []);
 
@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
     return qs.map(q => {
       const isChoice = ['radio', 'checkbox', 'dropdown', 'quiz_radio'].includes(q.type);
       const isScale = q.type === 'scale';
-      
+
       if (isChoice) {
         const { stats } = calculateOptionStatsForCompile(q.id, q.options, ansList);
         return {
@@ -275,7 +275,7 @@ export default function AnalyticsPage() {
   // Run AI analysis on single open-ended question
   const runAIAnalysis = async (qId: string, qText: string) => {
     const qAnswers = answers.filter(a => a.question_id === qId).map(a => a.value);
-    
+
     if (qAnswers.length === 0) {
       toast("Chưa có câu trả lời nào để phân tích.", 'info');
       return;
@@ -385,11 +385,11 @@ export default function AnalyticsPage() {
   const completionRate = totalSubmissions > 0 ? 100 : 0;
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 min-h-screen overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Navbar Header */}
       <header className="border-b border-[#E2E8F0] bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => router.push(`/builder/${formId}/edit`)}
             className="p-1.5 hover:bg-slate-50 border border-[#E2E8F0] rounded transition text-textMuted hover:text-textMain"
           >
@@ -422,10 +422,10 @@ export default function AnalyticsPage() {
 
       {/* Main Body Split Screen */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        
+
         {/* LEFT PANEL: Report Dashboard (3/5 Width) */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-          
+
           {/* KPI Cards Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white border border-[#E2E8F0] p-4 rounded-2xl flex items-center gap-4 shadow-sm">
@@ -493,7 +493,7 @@ export default function AnalyticsPage() {
                                 <span className="text-textMuted">{stat.count} lượt ({stat.percent}%)</span>
                               </div>
                               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className="h-full bg-accentIndigo rounded-full"
                                   style={{ width: `${stat.percent}%` }}
                                 />
@@ -515,7 +515,7 @@ export default function AnalyticsPage() {
                           <div className="text-3xl font-extrabold text-accentIndigo">{average}</div>
                           <div className="text-[9px] font-bold text-textMuted uppercase mt-1">Điểm trung bình</div>
                         </div>
-                        
+
                         <div className="flex-1 flex flex-col gap-1.5 w-full">
                           {['5', '4', '3', '2', '1'].map((val) => {
                             const count = distribution[val] || 0;
@@ -524,7 +524,7 @@ export default function AnalyticsPage() {
                               <div key={val} className="flex items-center gap-3 text-xs">
                                 <span className="w-12 text-textMuted text-right font-semibold">{val} Sao</span>
                                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                  <div 
+                                  <div
                                     className="h-full bg-amber-400 rounded-full"
                                     style={{ width: `${percent}%` }}
                                   />
@@ -555,9 +555,9 @@ export default function AnalyticsPage() {
                                 <div className="flex justify-between items-center text-[9px] text-textMuted mb-1 font-semibold">
                                   <span>Phản hồi #{aIdx + 1}</span>
                                   {ans.audio_url && (
-                                    <a 
-                                      href={ans.audio_url} 
-                                      target="_blank" 
+                                    <a
+                                      href={ans.audio_url}
+                                      target="_blank"
                                       rel="noreferrer"
                                       className="flex items-center gap-1 text-accentIndigo hover:underline"
                                     >
@@ -581,7 +581,7 @@ export default function AnalyticsPage() {
                               <Sparkles size={16} />
                               <span className="text-xs font-bold">Phân Tích Ý Kiến AI</span>
                             </div>
-                            
+
                             <button
                               onClick={() => runAIAnalysis(q.id, q.text)}
                               disabled={analyzingQuestionId === q.id || qAnswers.length === 0}
@@ -612,22 +612,22 @@ export default function AnalyticsPage() {
                                   <div className="font-bold text-textMain mb-2.5">Sắc thái tình cảm:</div>
                                   <div className="flex items-center gap-3">
                                     <div className="flex-1 flex h-4 rounded overflow-hidden text-[9px] font-bold text-white text-center">
-                                      <div 
-                                        className="bg-green-500 flex items-center justify-center" 
+                                      <div
+                                        className="bg-green-500 flex items-center justify-center"
                                         style={{ width: `${aiResult.sentiment.positive}%` }}
                                         title="Tích cực"
                                       >
                                         {aiResult.sentiment.positive > 15 ? `${aiResult.sentiment.positive}%` : ''}
                                       </div>
-                                      <div 
-                                        className="bg-slate-400 flex items-center justify-center" 
+                                      <div
+                                        className="bg-slate-400 flex items-center justify-center"
                                         style={{ width: `${aiResult.sentiment.neutral}%` }}
                                         title="Trung lập"
                                       >
                                         {aiResult.sentiment.neutral > 15 ? `${aiResult.sentiment.neutral}%` : ''}
                                       </div>
-                                      <div 
-                                        className="bg-red-500 flex items-center justify-center" 
+                                      <div
+                                        className="bg-red-500 flex items-center justify-center"
                                         style={{ width: `${aiResult.sentiment.negative}%` }}
                                         title="Tiêu cực"
                                       >
@@ -730,12 +730,12 @@ export default function AnalyticsPage() {
               </div>
               <div className="text-left">
                 <h3 className="font-bold text-xs text-textMain flex items-center gap-1.5">
-                  Trợ lý Phân tích hoiyAi
+                  Trợ lý Phân tích HoiyAI
                 </h3>
                 <p className="text-[9px] text-textMuted mt-0.5">Tự động tóm tắt & Khai phá Insight nổi bật</p>
               </div>
             </div>
-            
+
             <button
               onClick={generateAutoSummary}
               disabled={isGeneratingSummary}
@@ -753,20 +753,18 @@ export default function AnalyticsPage() {
               return (
                 <div key={index} className={`flex gap-3 max-w-[90%] ${isAi ? 'self-start' : 'self-end ml-auto flex-row-reverse'}`}>
                   {/* Icon */}
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                    isAi 
-                      ? 'bg-indigo-50 border-indigo-100 text-accentIndigo' 
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${isAi
+                      ? 'bg-indigo-50 border-indigo-100 text-accentIndigo'
                       : 'bg-slate-100 border-slate-200 text-slate-600'
-                  }`}>
+                    }`}>
                     {isAi ? <Bot size={14} /> : <User size={14} />}
                   </div>
 
                   {/* Message body */}
-                  <div className={`p-3 rounded-2xl text-xs shadow-sm leading-relaxed border ${
-                    isAi 
-                      ? 'bg-white border-[#E2E8F0] rounded-tl-none text-slate-700' 
+                  <div className={`p-3 rounded-2xl text-xs shadow-sm leading-relaxed border ${isAi
+                      ? 'bg-white border-[#E2E8F0] rounded-tl-none text-slate-700'
                       : 'bg-accentIndigo border-indigo-600 text-white rounded-tr-none'
-                  }`}>
+                    }`}>
                     <div className="space-y-1.5">
                       {renderMessageContent(msg.content)}
                     </div>
