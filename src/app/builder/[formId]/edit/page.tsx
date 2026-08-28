@@ -23,6 +23,36 @@ interface Question {
   condition_value?: string | null;
 }
 
+// Helper to parse checkbox JSON structure safely with multiple correct answers support
+const parseCheckboxCorrectAnswer = (val: any) => {
+  let min = 1;
+  let correct: string[] = [];
+  
+  if (val) {
+    if (typeof val === 'string' && val.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(val);
+        min = parsed.min || 1;
+        
+        const c = parsed.correct;
+        if (Array.isArray(c)) {
+          correct = c;
+        } else if (c) {
+          correct = [c];
+        }
+      } catch {}
+    } else {
+      // Backward compatibility
+      if (/^\d+$/.test(val)) {
+        min = parseInt(val, 10);
+      } else {
+        correct = [val];
+      }
+    }
+  }
+  return { min, correct };
+};
+
 export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
@@ -193,7 +223,15 @@ export default function BuilderPage() {
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
         if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
-          if (!q.correct_answer || q.correct_answer.trim() === '') {
+          let hasCorrect = false;
+          if (q.type === 'checkbox') {
+            const { correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+            hasCorrect = correct.length > 0;
+          } else {
+            hasCorrect = !!(q.correct_answer && q.correct_answer.trim() !== '');
+          }
+
+          if (!hasCorrect) {
             toast(`Câu hỏi số ${i + 1} ("${q.text.substring(0, 30)}...") chưa được chọn đáp án đúng. Chế độ học tập bắt buộc mỗi câu hỏi lựa chọn phải có ít nhất 1 đáp án đúng!`, 'error');
             setIsSaving(false);
             return;
@@ -260,6 +298,15 @@ export default function BuilderPage() {
       // Map suggested answers into questions state
       setQuestions(prev => prev.map(q => {
         if (suggestedAnswers && suggestedAnswers[q.id]) {
+          if (q.type === 'checkbox') {
+            const { min } = parseCheckboxCorrectAnswer(q.correct_answer);
+            const rawSuggest = suggestedAnswers[q.id];
+            const nextCorrect = Array.isArray(rawSuggest) ? rawSuggest : [rawSuggest];
+            return {
+              ...q,
+              correct_answer: JSON.stringify({ min, correct: nextCorrect })
+            };
+          }
           return {
             ...q,
             correct_answer: suggestedAnswers[q.id]
