@@ -43,7 +43,8 @@ export async function POST(req: NextRequest) {
     params.signature = signature;
 
     // 4. Return parameters and the gateway URL to the client
-    const gatewayUrl = process.env.SEPAY_GATEWAY_URL || 'https://pay-sandbox.sepay.vn/v1/checkout/init';
+    const isLive = (process.env.SEPAY_MERCHANT_ID || '').startsWith('SP-LIVE-');
+    const gatewayUrl = process.env.SEPAY_GATEWAY_URL || (isLive ? 'https://pay.sepay.vn/v1/checkout/init' : 'https://pay-sandbox.sepay.vn/v1/checkout/init');
 
     return NextResponse.json({
       success: true,
