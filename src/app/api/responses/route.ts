@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+// Initialize a secure admin client to bypass select policy restrictions during anonymous submission inserts
+const supabaseAdmin = createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+);
 
 // POST /api/responses - Submit answers to a form
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
     const { formId, answers } = await req.json();
 
     if (!formId || !answers || !Array.isArray(answers)) {
@@ -15,8 +21,8 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get('user-agent') || 'Unknown';
     const ipAddress = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
-    // 1. Create response entry
-    const { data: response, error: responseError } = await supabase
+    // 1. Create response entry using supabaseAdmin (to bypass select policies for returning data)
+    const { data: response, error: responseError } = await supabaseAdmin
       .from('responses')
       .insert({
         form_id: formId,
@@ -38,13 +44,13 @@ export async function POST(req: NextRequest) {
       audio_url: ans.audioUrl || null
     }));
 
-    const { error: answersError } = await supabase
+    const { error: answersError } = await supabaseAdmin
       .from('answers')
       .insert(answersData);
 
     if (answersError) {
       // Rollback response entry
-      await supabase.from('responses').delete().eq('id', response.id);
+      await supabaseAdmin.from('responses').delete().eq('id', response.id);
       return NextResponse.json({ error: `Lỗi lưu câu trả lời: ${answersError.message}` }, { status: 500 });
     }
 
