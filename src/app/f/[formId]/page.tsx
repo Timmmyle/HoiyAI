@@ -181,14 +181,27 @@ export default function ResponderPage() {
     const currentQ = questions[activeIdx];
     
     // Check required check (skip for info type)
-    if (currentQ.type !== 'info' && currentQ.is_required && (!answers[currentQ.id] || (Array.isArray(answers[currentQ.id]) && answers[currentQ.id].length === 0))) {
+    const isAnsEmpty = currentQ.type === 'checkbox' 
+      ? getCheckboxArray(answers[currentQ.id]).length === 0
+      : (!answers[currentQ.id] || String(answers[currentQ.id]).trim() === '');
+
+    if (currentQ.type !== 'info' && currentQ.is_required && isAnsEmpty) {
       toast("Câu hỏi này là bắt buộc. Vui lòng trả lời.", 'error');
       return;
     }
 
     // Check minimum choices requirement for checkboxes
     if (currentQ.type === 'checkbox') {
-      const minRequired = parseInt(currentQ.correct_answer || '1', 10);
+      const val = currentQ.correct_answer;
+      let minRequired = 1;
+      if (val && val.trim().startsWith('{')) {
+        try {
+          minRequired = JSON.parse(val).min || 1;
+        } catch {}
+      } else if (val && /^\d+$/.test(val)) {
+        minRequired = parseInt(val, 10);
+      }
+
       const selectedAnswers = getCheckboxArray(answers[currentQ.id]);
       const hasAnswered = selectedAnswers.length > 0;
       
@@ -366,17 +379,31 @@ export default function ResponderPage() {
     // Double check active question constraints before submitting
     const currentQ = questions[activeIdx];
     if (currentQ) {
-      if (currentQ.type !== 'info' && currentQ.is_required && (!answers[currentQ.id] || (Array.isArray(answers[currentQ.id]) && answers[currentQ.id].length === 0))) {
+      const isAnsEmpty = currentQ.type === 'checkbox' 
+        ? getCheckboxArray(answers[currentQ.id]).length === 0
+        : (!answers[currentQ.id] || String(answers[currentQ.id]).trim() === '');
+
+      if (currentQ.type !== 'info' && currentQ.is_required && isAnsEmpty) {
         toast("Câu hỏi hiện tại là bắt buộc.", 'error');
         return;
       }
+
       if (currentQ.type === 'checkbox') {
-        const minRequired = parseInt(currentQ.correct_answer || '1', 10);
-        const selectedAnswers = answers[currentQ.id] || [];
-        const hasAnswered = Array.isArray(selectedAnswers) && selectedAnswers.length > 0;
+        const val = currentQ.correct_answer;
+        let minRequired = 1;
+        if (val && val.trim().startsWith('{')) {
+          try {
+            minRequired = JSON.parse(val).min || 1;
+          } catch {}
+        } else if (val && /^\d+$/.test(val)) {
+          minRequired = parseInt(val, 10);
+        }
+
+        const selectedAnswers = getCheckboxArray(answers[currentQ.id]);
+        const hasAnswered = selectedAnswers.length > 0;
         
         if (currentQ.is_required || hasAnswered) {
-          if (!Array.isArray(selectedAnswers) || selectedAnswers.length < minRequired) {
+          if (selectedAnswers.length < minRequired) {
             toast(`Vui lòng chọn tối thiểu ${minRequired} đáp án.`, 'error');
             return;
           }

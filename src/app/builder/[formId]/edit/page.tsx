@@ -667,15 +667,70 @@ export default function BuilderPage() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const isCurrentlyCorrect = q.correct_answer === opt;
-                                updateQuestion(q.id, { correct_answer: isCurrentlyCorrect ? null : opt });
+                                if (q.type === 'checkbox') {
+                                  let currentMin = 1;
+                                  let currentCorrect = null;
+                                  const val = q.correct_answer;
+                                  if (val && val.trim().startsWith('{')) {
+                                    try {
+                                      const parsed = JSON.parse(val);
+                                      currentMin = parsed.min || 1;
+                                      currentCorrect = parsed.correct || null;
+                                    } catch {}
+                                  } else if (val && /^\d+$/.test(val)) {
+                                    currentMin = parseInt(val, 10);
+                                  } else {
+                                    currentCorrect = val;
+                                  }
+
+                                  const isCurrentlyCorrect = currentCorrect === opt;
+                                  const nextCorrect = isCurrentlyCorrect ? null : opt;
+                                  updateQuestion(q.id, { 
+                                    correct_answer: JSON.stringify({ min: currentMin, correct: nextCorrect }) 
+                                  });
+                                } else {
+                                  const isCurrentlyCorrect = q.correct_answer === opt;
+                                  updateQuestion(q.id, { correct_answer: isCurrentlyCorrect ? null : opt });
+                                }
                               }}
                               className={`p-1 rounded transition-colors ${
-                                q.correct_answer === opt 
+                                (() => {
+                                  const val = q.correct_answer;
+                                  if (q.type === 'checkbox') {
+                                    let currentCorrect = null;
+                                    if (val && val.trim().startsWith('{')) {
+                                      try {
+                                        currentCorrect = JSON.parse(val).correct || null;
+                                      } catch {}
+                                    } else if (val && !/^\d+$/.test(val)) {
+                                      currentCorrect = val;
+                                    }
+                                    return currentCorrect === opt;
+                                  }
+                                  return val === opt;
+                                })()
                                   ? 'text-green-600 bg-green-50 border border-green-200' 
                                   : 'text-slate-300 hover:text-green-600 hover:bg-green-50/30'
                               }`}
-                              title={q.correct_answer === opt ? "Đáp án đúng (Bấm để hủy)" : "Đánh dấu là đáp án đúng"}
+                              title={
+                                (() => {
+                                  const val = q.correct_answer;
+                                  if (q.type === 'checkbox') {
+                                    let currentCorrect = null;
+                                    if (val && val.trim().startsWith('{')) {
+                                      try {
+                                        currentCorrect = JSON.parse(val).correct || null;
+                                      } catch {}
+                                    } else if (val && !/^\d+$/.test(val)) {
+                                      currentCorrect = val;
+                                    }
+                                    return currentCorrect === opt;
+                                  }
+                                  return val === opt;
+                                })()
+                                  ? "Đáp án đúng (Bấm để hủy)" 
+                                  : "Đánh dấu là đáp án đúng"
+                              }
                             >
                               <CheckCircle2 size={12} />
                             </button>
@@ -812,8 +867,33 @@ export default function BuilderPage() {
                           <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
                             <span className="font-semibold text-textMain">Số đáp án chọn tối thiểu:</span>
                             <select
-                              value={q.correct_answer || '1'}
-                              onChange={(e) => updateQuestion(q.id, { correct_answer: e.target.value })}
+                              value={(() => {
+                                const val = q.correct_answer;
+                                if (val && val.trim().startsWith('{')) {
+                                  try {
+                                    return JSON.parse(val).min?.toString() || '1';
+                                  } catch {}
+                                }
+                                if (val && /^\d+$/.test(val)) {
+                                  return val;
+                                }
+                                return '1';
+                              })()}
+                              onChange={(e) => {
+                                const nextMin = parseInt(e.target.value, 10);
+                                let nextCorrect = null;
+                                const val = q.correct_answer;
+                                if (val && val.trim().startsWith('{')) {
+                                  try {
+                                    nextCorrect = JSON.parse(val).correct || null;
+                                  } catch {}
+                                } else if (val && !/^\d+$/.test(val)) {
+                                  nextCorrect = val;
+                                }
+                                updateQuestion(q.id, { 
+                                  correct_answer: JSON.stringify({ min: nextMin, correct: nextCorrect }) 
+                                });
+                              }}
                               className="border border-[#E2E8F0] rounded px-2.5 py-1 text-xs text-textMain outline-none bg-white font-medium cursor-pointer"
                             >
                               {Array.from({ length: Math.max(1, q.options.length) }, (_, i) => i + 1).map((val) => (
