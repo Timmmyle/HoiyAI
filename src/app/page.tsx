@@ -826,19 +826,23 @@ export default function HomePage() {
                 <ul className="flex flex-col gap-3.5 text-xs text-textMain mb-6">
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Tạo khảo sát AI (tối đa 15 câu)</span>
+                    <span>Tạo khảo sát AI (Tối đa 20 câu)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Model gpt-5-nano và gemini</span>
+                    <span>Tạo thủ công (Không giới hạn câu)</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span className="font-bold text-indigo-600">Tối đa 40 kết quả phản hồi</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span>Model gpt-5-nano và gemini-lite</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
                     <span>Trình kéo thả cơ bản</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-red-400 font-bold">✗</span>
-                    <span className="text-textMuted line-through">File tài liệu dài</span>
                   </li>
                 </ul>
               </div>
@@ -867,19 +871,23 @@ export default function HomePage() {
                 <ul className="flex flex-col gap-3.5 text-xs text-textMain mb-6">
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Tạo khảo sát AI (tối đa 40 câu)</span>
+                    <span>Tạo khảo sát AI (Không giới hạn câu)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Nhập tài liệu vừa (đến 30 câu)</span>
+                    <span>Tạo thủ công (Không giới hạn câu)</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span className="font-bold text-indigo-600">Tối đa 100 kết quả phản hồi</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span>Nhập file tài liệu vừa</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
                     <span>Xuất kết quả Excel, CSV</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="text-green-500 font-bold">✓</span>
-                    <span>Hỗ trợ qua email</span>
                   </li>
                 </ul>
               </div>
@@ -920,19 +928,23 @@ export default function HomePage() {
                 <ul className="flex flex-col gap-3.5 text-xs text-textMain mb-6">
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Tối đa 100 câu hỏi khảo sát</span>
+                    <span>Tạo khảo sát AI (Không giới hạn câu)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Model trả phí gpt-5.4-nano, gpt-5.6-luna</span>
+                    <span>Tạo thủ công (Không giới hạn câu)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Tự động phát hiện, phục hồi lỗi câu hỏi</span>
+                    <span className="font-bold text-indigo-600">Không giới hạn kết quả phản hồi</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-green-500 font-bold">✓</span>
-                    <span>Lưu trữ siêu tốc, bảo vệ dữ liệu 100%</span>
+                    <span>Model vip gpt-5.4-nano, gpt-5.6-luna</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span>Phân tích, phục hồi lỗi câu hỏi tự động</span>
                   </li>
                 </ul>
               </div>

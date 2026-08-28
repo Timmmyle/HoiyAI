@@ -493,10 +493,16 @@ Trả về JSON hành động "add_questions" chứa mảng "questions_list" g�
     delete (fq as any)._tempOriginalId;
   });
 
+  let resultQuestions = finalQuestions;
+  if (tier === 'FREE' && resultQuestions.length > 20) {
+    console.log(`[AI Generator] FREE tier question limit (20) reached. Truncating from ${resultQuestions.length} questions.`);
+    resultQuestions = resultQuestions.slice(0, 20);
+  }
+
   const finalSurvey = {
     form_title: 'Khảo sát văn bản đã import',
-    ai_summary: `Khảo sát được tạo tự động chứa ${finalQuestions.length} câu hỏi phỏng vấn được bóc tách và phân lớp cấu trúc hoàn tất.`,
-    questions: finalQuestions
+    ai_summary: `Khảo sát được tạo tự động chứa ${resultQuestions.length} câu hỏi phỏng vấn được bóc tách và phân lớp cấu trúc hoàn tất.${finalQuestions.length > 20 && tier === 'FREE' ? ' (Đã giới hạn còn tối đa 20 câu hỏi do tài khoản ở gói Miễn phí)' : ''}`,
+    questions: resultQuestions
   };
 
   return { data: finalSurvey, usedModel };
