@@ -128,7 +128,7 @@ export default function HomePage() {
     toast("Đã đăng xuất thành công.", "success");
   };
 
-  const handleSelectPlan = (plan: string) => {
+  const handleSelectPlan = async (plan: string) => {
     if (!session) {
       toast("Vui lòng đăng nhập trước khi đăng ký gói cước.", "info");
       router.push('/login');
@@ -138,7 +138,38 @@ export default function HomePage() {
       toast("Tài khoản của bạn đang là gói Miễn phí.", "info");
       return;
     }
-    router.push(`/payment?tier=${plan}`);
+
+    try {
+      toast("Đang khởi tạo phiên thanh toán an toàn qua SePay...", "info");
+      const res = await fetch('/api/payment/init-sepay-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: plan })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Dynamically build and submit hidden POST form to SePay Gateway
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.gatewayUrl;
+        
+        Object.keys(data.fields).forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = data.fields[key];
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        toast(data.error || "Gặp lỗi khi kết nối cổng thanh toán.", "error");
+      }
+    } catch (err) {
+      console.error("Payment init error:", err);
+      toast("Không thể kết nối cổng thanh toán SePay.", "error");
+    }
   };
 
   // Drag & Drop
