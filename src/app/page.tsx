@@ -64,14 +64,24 @@ export default function HomePage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('tier, full_name')
+        .select('tier, full_name, tier_expires_at')
         .eq('id', session.user.id)
         .single();
       if (!error && data) {
-        if (data.tier) setUserTier(data.tier);
-        if (data.full_name) {
-          setUserProfileName(data.full_name);
-          setEditName(data.full_name);
+        // Auto-revert to FREE if subscription expired
+        if (data.tier !== 'FREE' && data.tier_expires_at && new Date() > new Date(data.tier_expires_at)) {
+          await supabase
+            .from('profiles')
+            .update({ tier: 'FREE', tier_expires_at: null })
+            .eq('id', session.user.id);
+          setUserTier('FREE');
+          toast("Gói cước trả phí của bạn đã hết hạn. Hệ thống đã chuyển về gói Miễn phí.", "info");
+        } else {
+          if (data.tier) setUserTier(data.tier);
+          if (data.full_name) {
+            setUserProfileName(data.full_name);
+            setEditName(data.full_name);
+          }
         }
       }
     } catch (err) {
@@ -822,10 +832,17 @@ export default function HomePage() {
                 </ul>
               </div>
               <button 
-                onClick={() => handleSelectPlan('FREE')}
-                className="w-full py-2.5 border border-[#E2E8F0] hover:bg-slate-50 transition text-textMain font-bold text-xs rounded-xl"
+                onClick={() => {
+                  if (userTier === 'FREE') {
+                    toast("Bạn đang sử dụng gói cước này.", "info");
+                  } else {
+                    toast("Bạn đang ở gói cước cao hơn.", "info");
+                  }
+                }}
+                disabled
+                className="w-full py-2.5 bg-slate-50 border border-[#E2E8F0] text-textMuted font-bold text-xs rounded-xl cursor-not-allowed opacity-75"
               >
-                Bắt đầu ngay
+                {userTier === 'FREE' ? 'Gói hiện tại' : 'Gói thấp hơn'}
               </button>
             </div>
 
@@ -855,12 +872,28 @@ export default function HomePage() {
                   </li>
                 </ul>
               </div>
-              <button 
-                onClick={() => handleSelectPlan('BASIC')}
-                className="w-full py-2.5 border border-[#E2E8F0] hover:bg-slate-50 transition text-textMain font-bold text-xs rounded-xl"
-              >
-                Chọn gói Cơ bản
-              </button>
+              {userTier === 'BASIC' ? (
+                <button
+                  disabled
+                  className="w-full py-2.5 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs rounded-xl cursor-not-allowed"
+                >
+                  ✓ Đang sử dụng gói này
+                </button>
+              ) : userTier === 'PRO' ? (
+                <button
+                  disabled
+                  className="w-full py-2.5 bg-slate-50 border border-[#E2E8F0] text-textMuted font-bold text-xs rounded-xl cursor-not-allowed opacity-75"
+                >
+                  Gói thấp hơn
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleSelectPlan('BASIC')}
+                  className="w-full py-2.5 border border-[#E2E8F0] hover:bg-slate-50 transition text-textMain font-bold text-xs rounded-xl"
+                >
+                  Chọn gói Cơ bản
+                </button>
+              )}
             </div>
 
             {/* Gói Chuyên Nghiệp */}
@@ -892,12 +925,21 @@ export default function HomePage() {
                   </li>
                 </ul>
               </div>
-              <button 
-                onClick={() => handleSelectPlan('PRO')}
-                className="w-full py-2.5 bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-90 transition text-white font-bold text-xs rounded-xl shadow-sm"
-              >
-                Nâng cấp Pro
-              </button>
+              {userTier === 'PRO' ? (
+                <button
+                  disabled
+                  className="w-full py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-600 font-bold text-xs rounded-xl cursor-not-allowed"
+                >
+                  ✓ Đang sử dụng gói này
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleSelectPlan('PRO')}
+                  className="w-full py-2.5 bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-90 transition text-white font-bold text-xs rounded-xl shadow-sm"
+                >
+                  Nâng cấp Pro
+                </button>
+              )}
             </div>
           </div>
         </section>

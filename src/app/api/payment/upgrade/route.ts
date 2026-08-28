@@ -25,9 +25,16 @@ export async function POST(request: Request) {
     // Since the service role is not used, the user can update their own profile if RLS permits.
     // Wait, let's check schema.sql: "Users can update their own profile on public.profiles for update using (auth.uid() = id)"
     // So the user's browser client/auth session CAN update their own profile row!
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days subscription
+
     const { error } = await supabase
       .from('profiles')
-      .update({ tier, updated_at: new Date().toISOString() })
+      .update({ 
+        tier, 
+        tier_expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', userId);
 
     if (error) {

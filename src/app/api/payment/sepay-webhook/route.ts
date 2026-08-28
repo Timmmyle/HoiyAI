@@ -66,11 +66,15 @@ export async function POST(req: NextRequest) {
 
     const userProfile = profiles[0];
 
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days subscription
+
     // 6. Perform user tier upgrade
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
         tier: targetTier, 
+        tier_expires_at: expiresAt.toISOString(),
         updated_at: new Date().toISOString() 
       })
       .eq('id', userProfile.id);
