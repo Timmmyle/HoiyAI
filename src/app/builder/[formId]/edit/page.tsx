@@ -715,25 +715,13 @@ export default function BuilderPage() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (q.type === 'checkbox') {
-                                  let currentMin = 1;
-                                  let currentCorrect = null;
-                                  const val = q.correct_answer;
-                                  if (val && val.trim().startsWith('{')) {
-                                    try {
-                                      const parsed = JSON.parse(val);
-                                      currentMin = parsed.min || 1;
-                                      currentCorrect = parsed.correct || null;
-                                    } catch {}
-                                  } else if (val && /^\d+$/.test(val)) {
-                                    currentMin = parseInt(val, 10);
-                                  } else {
-                                    currentCorrect = val;
-                                  }
-
-                                  const isCurrentlyCorrect = currentCorrect === opt;
-                                  const nextCorrect = isCurrentlyCorrect ? null : opt;
+                                  const { min, correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+                                  const isCurrentlyCorrect = correct.includes(opt);
+                                  const nextCorrect = isCurrentlyCorrect
+                                    ? correct.filter(c => c !== opt)
+                                    : [...correct, opt];
                                   updateQuestion(q.id, { 
-                                    correct_answer: JSON.stringify({ min: currentMin, correct: nextCorrect }) 
+                                    correct_answer: JSON.stringify({ min, correct: nextCorrect }) 
                                   });
                                 } else {
                                   const isCurrentlyCorrect = q.correct_answer === opt;
@@ -742,38 +730,22 @@ export default function BuilderPage() {
                               }}
                               className={`p-1 rounded transition-colors ${
                                 (() => {
-                                  const val = q.correct_answer;
                                   if (q.type === 'checkbox') {
-                                    let currentCorrect = null;
-                                    if (val && val.trim().startsWith('{')) {
-                                      try {
-                                        currentCorrect = JSON.parse(val).correct || null;
-                                      } catch {}
-                                    } else if (val && !/^\d+$/.test(val)) {
-                                      currentCorrect = val;
-                                    }
-                                    return currentCorrect === opt;
+                                    const { correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+                                    return correct.includes(opt);
                                   }
-                                  return val === opt;
+                                  return q.correct_answer === opt;
                                 })()
                                   ? 'text-green-600 bg-green-50 border border-green-200' 
                                   : 'text-slate-300 hover:text-green-600 hover:bg-green-50/30'
                               }`}
                               title={
                                 (() => {
-                                  const val = q.correct_answer;
                                   if (q.type === 'checkbox') {
-                                    let currentCorrect = null;
-                                    if (val && val.trim().startsWith('{')) {
-                                      try {
-                                        currentCorrect = JSON.parse(val).correct || null;
-                                      } catch {}
-                                    } else if (val && !/^\d+$/.test(val)) {
-                                      currentCorrect = val;
-                                    }
-                                    return currentCorrect === opt;
+                                    const { correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+                                    return correct.includes(opt);
                                   }
-                                  return val === opt;
+                                  return q.correct_answer === opt;
                                 })()
                                   ? "Đáp án đúng (Bấm để hủy)" 
                                   : "Đánh dấu là đáp án đúng"
