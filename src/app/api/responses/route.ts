@@ -21,6 +21,54 @@ export async function POST(req: NextRequest) {
     const userAgent = req.headers.get('user-agent') || 'Unknown';
     const ipAddress = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
+    // Verify submission count limits based on creator tier
+    // 1. Get form owner
+    const { data: form, error: formError } = await supabaseAdmin
+      .from('forms')
+      .select('user_id')
+      .eq('id', formId)
+      .single();
+
+    if (formError || !form) {
+      return NextResponse.json({ error: 'Không tìm thấy khảo sát để nộp câu trả lời.' }, { status: 404 });
+    }
+
+    // 2. Get owner tier
+    const { data: ownerProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('tier, tier_expires_at')
+      .eq('id', form.user_id)
+      .single();
+
+    let ownerTier = ownerProfile?.tier || 'FREE';
+    if (ownerTier !== 'FREE' && ownerProfile?.tier_expires_at && new Date() > new Date(ownerProfile.tier_expires_at)) {
+      // Demote expired tier
+      await supabaseAdmin
+        .from('profiles')
+        .update({ tier: 'FREE', tier_expires_at: null })
+        .eq('id', form.user_id);
+      ownerTier = 'FREE';
+    }
+
+    // 3. Count existing responses
+    const { count, error: countError } = await supabaseAdmin
+      .from('responses')
+      .select('*', { count: 'exact', head: true })
+      .eq('form_id', formId);
+
+    if (countError) {
+      return NextResponse.json({ error: `Lỗi kiểm tra giới hạn phản hồi: ${countError.message}` }, { status: 500 });
+    }
+
+    const currentCount = count || 0;
+    const limit = ownerTier === 'FREE' ? 40 : ownerTier === 'BASIC' ? 100 : Infinity;
+
+    if (currentCount >= limit) {
+      return NextResponse.json({
+        error: `Khảo sát này đã đạt giới hạn tối đa (${limit} phản hồi) của gói cước hiện tại của người tạo. Vui lòng liên hệ người tạo khảo sát để nâng cấp gói.`
+      }, { status: 403 });
+    }
+
     // 1. Create response entry using supabaseAdmin (to bypass select policies for returning data)
     const { data: response, error: responseError } = await supabaseAdmin
       .from('responses')

@@ -70,22 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Chưa đăng nhập để thực hiện tác vụ này.' }, { status: 401 });
     }
 
-    const { title, description, questions } = await req.json();
-
-    // Get user tier and enforce limits
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('tier')
-      .eq('id', user.id)
-      .single();
-    const userTier = profile?.tier || 'FREE';
-    const maxQuestions = userTier === 'FREE' ? 15 : userTier === 'BASIC' ? 40 : 100;
-
-    if (questions && Array.isArray(questions) && questions.length > maxQuestions) {
-      return NextResponse.json({ 
-        error: `Gói tài khoản hiện tại của bạn (${userTier === 'FREE' ? 'Miễn phí' : 'Cơ bản'}) bị giới hạn tối đa ${maxQuestions} câu hỏi. Vui lòng nâng cấp lên gói cao hơn để lưu trữ nhiều câu hỏi hơn!` 
-      }, { status: 403 });
-    }
+    const { title, description, is_quiz, questions } = await req.json();
 
     if (!title) {
       return NextResponse.json({ error: 'Khảo sát cần có tiêu đề.' }, { status: 400 });
@@ -97,6 +82,7 @@ export async function POST(req: NextRequest) {
       .insert({
         title,
         description,
+        is_quiz: is_quiz || false,
         user_id: user.id
       })
       .select()

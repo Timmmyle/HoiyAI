@@ -42,6 +42,8 @@ export default function BuilderPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [isQuiz, setIsQuiz] = useState(false);
+  const [isAnalyzingQuiz, setIsAnalyzingQuiz] = useState(false);
 
   // Monitor screen size for device redirection
   useEffect(() => {
@@ -66,6 +68,7 @@ export default function BuilderPage() {
 
       setTitle(data.form.title);
       setDescription(data.form.description || '');
+      setIsQuiz(data.form.is_quiz || false);
       
       // Map questions
       if (data.questions) {
@@ -184,6 +187,21 @@ export default function BuilderPage() {
   // Save changes to DB
   const handleSaveForm = async () => {
     setIsSaving(true);
+    
+    // Validate correct answers if in quiz mode
+    if (isQuiz) {
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
+          if (!q.correct_answer || q.correct_answer.trim() === '') {
+            toast(`Câu hỏi số ${i + 1} ("${q.text.substring(0, 30)}...") chưa được chọn đáp án đúng. Chế độ học tập bắt buộc mỗi câu hỏi lựa chọn phải có ít nhất 1 đáp án đúng!`, 'error');
+            setIsSaving(false);
+            return;
+          }
+        }
+      }
+    }
+
     try {
       const res = await fetch(`/api/forms/${formId}`, {
         method: 'PUT',
@@ -191,6 +209,7 @@ export default function BuilderPage() {
         body: JSON.stringify({
           title,
           description,
+          is_quiz: isQuiz,
           questions
         })
       });
@@ -205,6 +224,56 @@ export default function BuilderPage() {
       toast(`Lỗi lưu khảo sát: ${err.message}`, 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // AI Quiz mode analysis handler
+  const handleAiQuizAnalyze = async () => {
+    if (questions.length === 0) {
+      toast("Không có câu hỏi nào để phân tích.", "error");
+      return;
+    }
+
+    setIsAnalyzingQuiz(true);
+    toast("AI đang phân tích khảo sát để quyết định phân loại và gợi ý đáp án...", "info");
+    try {
+      const res = await fetch('/api/ai/quiz-analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          questions
+        })
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result.data) {
+        throw new Error(result.error || 'Lỗi kết nối AI.');
+      }
+
+      const { isQuiz: aiIsQuiz, analysis, suggestedAnswers } = result.data;
+      
+      // Update states
+      setIsQuiz(aiIsQuiz);
+      
+      // Map suggested answers into questions state
+      setQuestions(prev => prev.map(q => {
+        if (suggestedAnswers && suggestedAnswers[q.id]) {
+          return {
+            ...q,
+            correct_answer: suggestedAnswers[q.id]
+          };
+        }
+        return q;
+      }));
+
+      toast(`[AI Nhận Định] ${analysis}`, "success");
+    } catch (err: any) {
+      console.error(err);
+      toast(`Lỗi AI phân tích: ${err.message}`, "error");
+    } finally {
+      setIsAnalyzingQuiz(false);
     }
   };
 
@@ -360,6 +429,59 @@ export default function BuilderPage() {
 
         {/* Middle Column: Canvas Zone */}
         <main className="flex-1 p-6 overflow-y-auto max-w-4xl mx-auto w-full">
+          {/* Quiz Mode Configuration Bar */}
+          <div className="bg-white border border-[#E2E8F0] p-4 rounded-2xl mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all ${
+                isQuiz 
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
+                  : 'bg-slate-50 border-slate-200 text-slate-400'
+              }`}>
+                <CheckCircle2 size={16} />
+              </div>
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Chế độ hoạt động</span>
+                <span className="text-xs font-bold text-textMain">
+                  {isQuiz ? 'Chế độ Học tập / Bài tập trắc nghiệm' : 'Khảo sát ý kiến bình thường'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Toggle switch */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isQuiz}
+                  onChange={(e) => setIsQuiz(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 relative transition-colors" />
+                <span className="text-xs font-semibold text-textMain">Bật Chế độ Học tập</span>
+              </label>
+
+              {/* AI auto-setup button */}
+              <button
+                type="button"
+                onClick={handleAiQuizAnalyze}
+                disabled={isAnalyzingQuiz || questions.length === 0}
+                className="flex items-center gap-1.5 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 text-accentIndigo hover:text-indigo-700 disabled:opacity-50 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
+              >
+                {isAnalyzingQuiz ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    AI Đang phân tích...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={12} />
+                    AI Cài đặt Đáp án
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* AI Generator Summary Dashboard */}
           {showAiDashboard && description && (
             <div className="bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border border-indigo-100 rounded-2xl p-5 mb-6 relative animate-slide-in shadow-sm">
@@ -540,22 +662,24 @@ export default function BuilderPage() {
                     <div className="flex flex-col gap-2 pl-3">
                       {q.options.map((opt, oIdx) => (
                         <div key={oIdx} className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const isCurrentlyCorrect = q.correct_answer === opt;
-                              updateQuestion(q.id, { correct_answer: isCurrentlyCorrect ? null : opt });
-                            }}
-                            className={`p-1 rounded transition-colors ${
-                              q.correct_answer === opt 
-                                ? 'text-green-600 bg-green-50 border border-green-200' 
-                                : 'text-slate-300 hover:text-green-600 hover:bg-green-50/30'
-                            }`}
-                            title={q.correct_answer === opt ? "Đáp án đúng (Bấm để hủy)" : "Đánh dấu là đáp án đúng"}
-                          >
-                            <CheckCircle2 size={12} />
-                          </button>
+                          {isQuiz && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isCurrentlyCorrect = q.correct_answer === opt;
+                                updateQuestion(q.id, { correct_answer: isCurrentlyCorrect ? null : opt });
+                              }}
+                              className={`p-1 rounded transition-colors ${
+                                q.correct_answer === opt 
+                                  ? 'text-green-600 bg-green-50 border border-green-200' 
+                                  : 'text-slate-300 hover:text-green-600 hover:bg-green-50/30'
+                              }`}
+                              title={q.correct_answer === opt ? "Đáp án đúng (Bấm để hủy)" : "Đánh dấu là đáp án đúng"}
+                            >
+                              <CheckCircle2 size={12} />
+                            </button>
+                          )}
 
                           <input
                             type="text"

@@ -57,6 +57,43 @@ export default function AnalyticsPage() {
 
   const supabase = createClient();
 
+  // Device and IP analytics calculations for reports
+  const getDeviceType = (ua: string) => {
+    const lowUa = ua.toLowerCase();
+    if (lowUa.includes('tablet') || lowUa.includes('ipad')) return 'Máy tính bảng';
+    if (lowUa.includes('mobi') || lowUa.includes('android') || lowUa.includes('iphone')) return 'Điện thoại';
+    return 'Máy tính để bàn';
+  };
+
+  const getDeviceStats = () => {
+    let mobile = 0, tablet = 0, desktop = 0;
+    responses.forEach(r => {
+      const type = getDeviceType(r.user_agent || '');
+      if (type === 'Điện thoại') mobile++;
+      else if (type === 'Máy tính bảng') tablet++;
+      else desktop++;
+    });
+    const total = responses.length || 1;
+    return {
+      mobile: { count: mobile, percent: Math.round((mobile / total) * 100) },
+      tablet: { count: tablet, percent: Math.round((tablet / total) * 100) },
+      desktop: { count: desktop, percent: Math.round((desktop / total) * 100) }
+    };
+  };
+
+  const getIpStats = () => {
+    const ipCounts: { [ip: string]: number } = {};
+    responses.forEach(r => {
+      const ip = r.ip_address || 'Ẩn danh';
+      ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+    });
+    const total = responses.length || 1;
+    return Object.entries(ipCounts)
+      .map(([ip, count]) => ({ ip, count, percent: Math.round((count / total) * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  };
+
   // Load database content
   const loadData = async () => {
     try {
@@ -455,6 +492,69 @@ export default function AnalyticsPage() {
               <div>
                 <div className="text-[9px] font-bold text-textMuted uppercase">Thời gian trung bình</div>
                 <div className="text-lg font-bold text-textMain mt-0.5">1m 45s</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Device & Platform Analytics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Device breakdown card */}
+            <div className="bg-white border border-[#E2E8F0] p-5 rounded-2xl shadow-sm">
+              <h3 className="text-xs font-bold text-textMain mb-3 uppercase tracking-wider">Cơ cấu Thiết bị (User-Agent)</h3>
+              {(() => {
+                const stats = getDeviceStats();
+                return (
+                  <div className="space-y-3.5 text-xs">
+                    <div>
+                      <div className="flex justify-between font-semibold mb-1">
+                        <span className="text-textMain">💻 Máy tính để bàn</span>
+                        <span className="text-textMuted">{stats.desktop.count} lượt ({stats.desktop.percent}%)</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${stats.desktop.percent}%` }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between font-semibold mb-1">
+                        <span className="text-textMain">📱 Điện thoại di động</span>
+                        <span className="text-textMuted">{stats.mobile.count} lượt ({stats.mobile.percent}%)</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats.mobile.percent}%` }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between font-semibold mb-1">
+                        <span className="text-textMain">🔌 Máy tính bảng</span>
+                        <span className="text-textMuted">{stats.tablet.count} lượt ({stats.tablet.percent}%)</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${stats.tablet.percent}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Top IP addresses card */}
+            <div className="bg-white border border-[#E2E8F0] p-5 rounded-2xl shadow-sm">
+              <h3 className="text-xs font-bold text-textMain mb-3 uppercase tracking-wider">Top 5 địa chỉ IP nộp khảo sát</h3>
+              <div className="space-y-2.5 text-xs font-mono">
+                {getIpStats().map((ipStat, idx) => (
+                  <div key={idx}>
+                    <div className="flex justify-between font-semibold mb-0.5">
+                      <span className="text-textMain">{ipStat.ip}</span>
+                      <span className="text-textMuted">{ipStat.count} lượt ({ipStat.percent}%)</span>
+                    </div>
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${ipStat.percent}%` }} />
+                    </div>
+                  </div>
+                ))}
+                {getIpStats().length === 0 && (
+                  <div className="text-center text-textMuted py-4 font-sans">Chưa có dữ liệu địa chỉ IP.</div>
+                )}
               </div>
             </div>
           </div>
