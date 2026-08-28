@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     // 1. Build required SePay parameters
     const params: any = {
       merchant: process.env.SEPAY_MERCHANT_ID || '12345',
+      operation: 'PURCHASE',
       order_invoice_number: `HOIYAI_${userIdPrefix}_${tier}_${Date.now()}`,
       order_amount: price,
       currency: 'VND',
