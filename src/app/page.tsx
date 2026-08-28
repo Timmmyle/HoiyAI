@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Sparkles, FileUp, ArrowRight, LogOut, FileSpreadsheet, Plus,
   Users, CheckCircle2, MessageSquare, Clipboard, Loader2,
-  Trash2, Eye, Share2, BarChart3, Edit, Calendar, AlertTriangle
+  Trash2, Eye, Share2, BarChart3, Edit, Calendar, AlertTriangle, HelpCircle
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -340,6 +340,7 @@ export default function HomePage() {
 
     let templateQuestions: any[] = [];
     let title = '';
+    let isQuizTemplate = false;
 
     if (templateName === 'Trang trắng') {
       title = 'Khảo sát chưa đặt tên';
@@ -351,12 +352,20 @@ export default function HomePage() {
         { type: 'checkbox', text: 'Hoạt động nào bạn thấy ấn tượng nhất? (Chọn nhiều)', options: ['Nội dung chia sẻ', 'Thời gian tổ chức', 'Hậu cần & tiệc ngọt', 'Hoạt động networking'], is_branching: false },
         { type: 'voice', text: 'Ý kiến đóng góp thêm của bạn (nói hoặc gõ tiếng Việt)', options: [], is_branching: false }
       ];
-    } else if (templateName === 'Khảo sát KH') {
+    } else if (templateName === 'Khảo sát khách hàng') {
       title = 'Khảo sát mức độ hài lòng khách hàng';
       templateQuestions = [
         { type: 'radio', text: 'Bạn có muốn tiếp tục sử dụng dịch vụ của chúng tôi không?', options: ['Có, chắc chắn', 'Không, cảm ơn'], is_branching: true, id: 'q1' },
         { type: 'textarea', text: 'Lý do bạn không muốn sử dụng dịch vụ?', options: [], visibility: { condition_question_id: 'q1', condition_value: 'Không, cảm ơn' } },
         { type: 'scale', text: 'Đánh giá chất lượng phục vụ của chúng tôi', options: [], is_branching: false }
+      ];
+    } else if (templateName === 'Bài tập trắc nghiệm') {
+      title = 'Bài kiểm tra Kiến thức tổng hợp';
+      isQuizTemplate = true;
+      templateQuestions = [
+        { type: 'radio', text: 'Thủ đô của Việt Nam là gì?', options: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'], correct_answer: 'Hà Nội', is_branching: false },
+        { type: 'dropdown', text: '1 + 1 bằng mấy?', options: ['1', '2', '3', '4'], correct_answer: '2', is_branching: false },
+        { type: 'radio', text: 'Trí tuệ nhân tạo viết tắt là gì?', options: ['IA', 'AI', 'AR', 'VR'], correct_answer: 'AI', is_branching: false }
       ];
     } else {
       title = 'Khảo sát ý kiến nhân viên';
@@ -373,7 +382,8 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          description: 'Mẫu khảo sát khởi tạo nhanh.',
+          description: isQuizTemplate ? 'Mẫu bài tập trắc nghiệm học tập.' : 'Mẫu khảo sát khởi tạo nhanh.',
+          is_quiz: isQuizTemplate,
           questions: templateQuestions
         })
       });
@@ -581,18 +591,19 @@ export default function HomePage() {
           <h2 className="text-xs font-bold text-textMuted uppercase tracking-wider mb-4 text-left">
             Tạo Nhanh (Templates)
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 w-full">
             {[
               { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số không' },
               { name: 'Đánh giá Event', icon: CheckCircle2, desc: 'Phản hồi sau sự kiện' },
-              { name: 'Khảo sát KH', icon: Users, desc: 'Khảo sát khách hàng' },
+              { name: 'Khảo sát khách hàng', icon: Users, desc: 'Khảo sát khách hàng' },
+              { name: 'Bài tập trắc nghiệm', icon: HelpCircle, desc: 'Bài kiểm tra có đáp án đúng' },
               { name: 'Nhân sự', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ' }
             ].map((tmpl, idx) => (
               <button
                 key={idx}
                 onClick={() => handleCreateFromTemplate(tmpl.name)}
                 disabled={isGenerating}
-                className="bg-white hover:border-accentIndigo hover:shadow-md transition text-left border border-[#E2E8F0] p-4 rounded-xl shadow-sm flex flex-col items-start"
+                className="bg-white hover:border-accentIndigo hover:shadow-md transition text-left border border-[#E2E8F0] p-4 rounded-xl shadow-sm flex flex-col items-start w-full"
               >
                 <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center text-textMuted mb-3 border border-[#E2E8F0]">
                   <tmpl.icon size={16} />
