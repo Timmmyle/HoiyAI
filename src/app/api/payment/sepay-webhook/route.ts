@@ -20,10 +20,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[SePay Webhook] Received webhook payload:', body);
 
-    const { amountIn, content, id: transactionId } = body;
+    const amountIn = body.amount_in !== undefined ? body.amount_in : body.amountIn;
+    const content = body.content || body.transfer_content;
+    const transactionId = body.id || body.transaction_id;
 
-    if (!content || !amountIn) {
-      return NextResponse.json({ error: 'Missing content or amountIn' }, { status: 400 });
+    if (!content) {
+      return NextResponse.json({ error: 'Missing content field (nội dung chuyển khoản)' }, { status: 400 });
     }
 
     // 3. Extract user ID prefix and target tier from memo content
@@ -31,18 +33,18 @@ export async function POST(req: NextRequest) {
     const match = content.match(/HOIYAI_([a-f0-9]{8})_(BASIC|PRO)/i);
     if (!match) {
       console.log(`[SePay Webhook] Memo content "${content}" does not match hoiyAi format. Skipping.`);
-      return NextResponse.json({ success: true, message: 'Memo format not recognized, skipped.' });
+      return NextResponse.json({ success: true, message: 'Nội dung chuyển khoản không khớp định dạng, bỏ qua.' });
     }
 
     const [, idPrefix, tier] = match;
     const targetTier = tier.toUpperCase();
-    const paidAmount = Number(amountIn);
+    const paidAmount = amountIn !== undefined ? Number(amountIn) : 0;
 
     // 4. Validate payment amount for the corresponding tier
     const requiredAmount = targetTier === 'BASIC' ? 79000 : 199000;
     if (paidAmount < requiredAmount) {
       console.warn(`[SePay Webhook] Paid amount ${paidAmount} is less than required ${requiredAmount} for ${targetTier}. Upgrade rejected.`);
-      return NextResponse.json({ error: 'Insufficient payment amount' }, { status: 400 });
+      return NextResponse.json({ success: false, message: `Số tiền thanh toán (${paidAmount}đ) không đủ để nâng cấp gói ${targetTier} (yêu cầu ${requiredAmount}đ).` });
     }
 
     // 5. Look up user by UUID prefix in database
@@ -88,6 +90,13 @@ export async function POST(req: NextRequest) {
     console.error('[SePay Webhook Error]:', err);
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ 
+    success: true, 
+    message: "hoiyAi SePay Webhook is online. Only POST requests containing transaction payloads will trigger account upgrades." 
+  });
 }
 
 export const dynamic = 'force-dynamic';
