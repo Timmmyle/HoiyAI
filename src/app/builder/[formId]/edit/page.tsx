@@ -411,10 +411,10 @@ export default function BuilderPage() {
               { type: 'voice', label: 'Ghi âm giọng nói (Voice)', icon: Sparkles },
               { type: 'video', label: 'Phỏng vấn Video & Camera', icon: Video },
               { type: 'scale', label: 'Thang đo rating 1-5', icon: Settings },
-              { type: 'dropdown', label: 'Dropdown danh sách', icon: ListPlus },
+              // { type: 'dropdown', label: 'Dropdown danh sách', icon: ListPlus },
               { type: 'date', label: 'Ngày / Giờ', icon: Settings },
               { type: 'file', label: 'Tải lên tệp đính kèm', icon: Settings }
-            ].map((item) => (
+            ].filter(item => item.type !== 'dropdown').map((item) => (
               <button
                 key={item.type}
                 onClick={() => addQuestion(item.type)}
@@ -593,7 +593,7 @@ export default function BuilderPage() {
                         <option value="voice">Voice</option>
                         <option value="video">Video</option>
                         <option value="scale">Scale</option>
-                        <option value="dropdown">Dropdown</option>
+                        {/* <option value="dropdown">Dropdown</option> */}
                         <option value="date">Date</option>
                         <option value="file">File</option>
                       </select>

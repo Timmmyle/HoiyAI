@@ -60,6 +60,24 @@ export default function ResponderPage() {
   const videoRecordRecorderRef = useRef<MediaRecorder | null>(null);
   const videoChunksRef = useRef<Blob[]>([]);
 
+  // Helper to ensure checkbox selections are always resolved as array of strings
+  const getCheckboxArray = (val: any): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          return [trimmed];
+        }
+      }
+      return trimmed ? [trimmed] : [];
+    }
+    return [String(val)];
+  };
+
   // Load Form Data
   useEffect(() => {
     const loadForm = async () => {
@@ -171,11 +189,11 @@ export default function ResponderPage() {
     // Check minimum choices requirement for checkboxes
     if (currentQ.type === 'checkbox') {
       const minRequired = parseInt(currentQ.correct_answer || '1', 10);
-      const selectedAnswers = answers[currentQ.id] || [];
-      const hasAnswered = Array.isArray(selectedAnswers) && selectedAnswers.length > 0;
+      const selectedAnswers = getCheckboxArray(answers[currentQ.id]);
+      const hasAnswered = selectedAnswers.length > 0;
       
       if (currentQ.is_required || hasAnswered) {
-        if (!Array.isArray(selectedAnswers) || selectedAnswers.length < minRequired) {
+        if (selectedAnswers.length < minRequired) {
           toast(`Vui lòng chọn tối thiểu ${minRequired} đáp án.`, 'error');
           return;
         }
@@ -533,7 +551,7 @@ export default function ResponderPage() {
               {activeQuestion.type === 'checkbox' && (
                 <div className="flex flex-col gap-2.5">
                   {activeQuestion.options.map((opt, oIdx) => {
-                    const currentSel = answers[activeQuestion.id] || [];
+                    const currentSel = getCheckboxArray(answers[activeQuestion.id]);
                     const isSelected = currentSel.includes(opt);
 
                     return (
