@@ -547,9 +547,15 @@ export default function ResponderPage() {
           <span>{formTitle}</span>
           <span>{progressPercent}% Hoàn thành</span>
         </div>
-        <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+        <div className={`w-full h-2 rounded-full overflow-hidden transition-colors ${
+          isQuiz ? 'bg-[#FFE0D1]' : 'bg-[#E2E8F0]'
+        }`}>
           <div 
-            className="h-full bg-gradient-to-r from-accentIndigo to-accentViolet transition-all duration-300"
+            className={`h-full transition-all duration-300 ${
+              isQuiz
+                ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733]'
+                : 'bg-gradient-to-r from-accentIndigo to-accentViolet'
+            }`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -781,24 +787,34 @@ export default function ResponderPage() {
 
               {/* Rating Scale */}
               {activeQuestion.type === 'scale' && (
-                <div className="flex justify-between items-center border border-[#E2E8F0] p-5 rounded-xl bg-slate-50/20">
-                  <span className="text-[10px] font-bold text-textMuted">Kém</span>
+                <div className={`flex justify-between items-center border p-5 rounded-2xl transition-colors ${
+                  isQuiz ? 'bg-[#FFF9F2] border-[#FFE0D1]' : 'bg-slate-50/20 border-[#E2E8F0]'
+                }`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isQuiz ? 'text-[#FF5733]' : 'text-textMuted'
+                  }`}>Kém</span>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         onClick={() => handleAnswerChange(activeQuestion.id, val.toString())}
-                        className={`w-9 h-9 rounded-full border flex items-center justify-center font-bold text-xs transition ${
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center font-extrabold text-xs transition-all ${
                           answers[activeQuestion.id] === val.toString()
-                            ? 'bg-accentIndigo text-white border-accentIndigo'
-                            : 'bg-white border-[#E2E8F0] text-textMain hover:border-slate-300'
+                            ? isQuiz
+                              ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white border-transparent shadow-md shadow-orange-500/20 scale-105'
+                              : 'bg-accentIndigo text-white border-accentIndigo shadow-sm scale-105'
+                            : isQuiz
+                              ? 'bg-white border-[#FFE0D1] text-slate-700 hover:border-[#FF5733] hover:text-[#FF5733]'
+                              : 'bg-white border-[#E2E8F0] text-textMain hover:border-slate-300'
                         }`}
                       >
                         {val}
                       </button>
                     ))}
                   </div>
-                  <span className="text-[10px] font-bold text-textMuted">Tốt</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isQuiz ? 'text-[#FF5733]' : 'text-textMuted'
+                  }`}>Tốt</span>
                 </div>
               )}
 

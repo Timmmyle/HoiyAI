@@ -41,6 +41,7 @@ export default function AnalyticsPage() {
   // States
   const [isLoading, setIsLoading] = useState(true);
   const [formTitle, setFormTitle] = useState('');
+  const [isQuiz, setIsQuiz] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [responses, setResponses] = useState<Response[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -193,6 +194,7 @@ export default function AnalyticsPage() {
       if (!formRes.ok) throw new Error(formData.error);
 
       setFormTitle(formData.form.title);
+      setIsQuiz(!!formData.form?.is_quiz);
       setQuestions(formData.questions || []);
 
       // Load responses
@@ -510,26 +512,34 @@ export default function AnalyticsPage() {
   const completionRate = totalSubmissions > 0 ? 100 : 0;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-50 overflow-hidden">
+    <div className={`h-screen w-screen flex flex-col overflow-hidden transition-colors duration-300 ${
+      isQuiz ? 'bg-[#FFF9F2] text-slate-800' : 'bg-slate-50 text-textMain'
+    }`}>
       {/* Navbar Header */}
-      <header className="border-b border-[#E2E8F0] bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+      <header className={`border-b transition-colors px-6 py-4 flex items-center justify-between sticky top-0 z-50 ${
+        isQuiz ? 'border-[#FFE4D6] bg-white/90 backdrop-blur-md' : 'border-[#E2E8F0] bg-white'
+      }`}>
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(`/builder/${formId}/edit`)}
-            className="p-1.5 hover:bg-slate-50 border border-[#E2E8F0] rounded transition text-textMuted hover:text-textMain"
+            className="p-1.5 hover:bg-slate-50 border border-[#E2E8F0] rounded-xl transition text-textMuted hover:text-textMain"
           >
             <ArrowLeft size={16} />
           </button>
           <div>
-            <span className="text-[10px] font-bold text-textMuted uppercase tracking-wide">Báo Cáo Kết Quả</span>
-            <h1 className="font-bold text-sm text-textMain">{formTitle}</h1>
+            <span className={`text-[10px] font-extrabold uppercase tracking-wide ${
+              isQuiz ? 'text-[#FF5733]' : 'text-textMuted'
+            }`}>
+              {isQuiz ? '🎨 Báo Cáo Kết Quả Bài Tập (Quiz Mode)' : '📋 Báo Cáo Kết Quả Khảo Sát'}
+            </span>
+            <h1 className="font-bold text-sm text-slate-900">{formTitle}</h1>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={loadData}
-            className="flex items-center gap-1.5 border border-[#E2E8F0] hover:bg-slate-50 text-textMuted hover:text-textMain transition px-3 py-1.5 rounded text-xs font-semibold bg-white"
+            className="flex items-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-600 transition px-3 py-1.5 rounded-xl text-xs font-semibold bg-white"
           >
             <RefreshCw size={14} />
             Làm mới
@@ -539,20 +549,28 @@ export default function AnalyticsPage() {
             type="button"
             onClick={handleGenerateExecutiveReport}
             disabled={isGeneratingReport || responses.length === 0}
-            className="flex items-center gap-1.5 border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-accentIndigo transition px-3.5 py-1.5 rounded text-xs font-bold shadow-sm disabled:opacity-50"
-            title="Khởi tạo bản báo cáo nghiên cứu tổng hợp AI (Chuẩn PDF Executive)"
+            className={`flex items-center gap-1.5 border transition px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm disabled:opacity-50 ${
+              isQuiz
+                ? 'border-[#FFD8C7] bg-[#FFF0E6] text-[#FF5733] hover:bg-[#FFE4D6]'
+                : 'border-indigo-200 bg-indigo-50/70 text-accentIndigo hover:bg-indigo-100'
+            }`}
+            title="Khởi tạo bản báo cáo nghiên cứu tổng hợp AI"
           >
             {isGeneratingReport ? (
-              <Loader2 size={14} className="animate-spin text-accentIndigo" />
+              <Loader2 size={14} className={`animate-spin ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`} />
             ) : (
-              <FileText size={14} className="text-accentIndigo" />
+              <FileText size={14} className={isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'} />
             )}
             Báo cáo AI Executive
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 bg-accentIndigo text-white hover:opacity-90 transition px-4 py-1.5 rounded text-xs font-bold shadow-sm"
+            className={`flex items-center gap-1.5 text-white transition px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm ${
+              isQuiz
+                ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 shadow-orange-500/20'
+                : 'bg-accentIndigo hover:opacity-90'
+            }`}
           >
             <Download size={14} />
             Xuất dữ liệu CSV
@@ -677,7 +695,11 @@ export default function AnalyticsPage() {
                     <div className="font-bold text-xs text-textMain leading-snug pr-4">
                       Câu {idx + 1}: {q.text}
                     </div>
-                    <span className="text-[8px] font-bold text-accentIndigo uppercase bg-indigo-50 border border-indigo-100/50 px-2 py-0.5 rounded-full">
+                    <span className={`text-[8px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                      isQuiz
+                        ? 'text-[#FF5733] bg-[#FFF0E6] border-[#FFD8C7]'
+                        : 'text-accentIndigo bg-indigo-50 border-indigo-100/50'
+                    }`}>
                       {q.type}
                     </span>
                   </div>
@@ -697,7 +719,9 @@ export default function AnalyticsPage() {
                               </div>
                               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-accentIndigo rounded-full"
+                                  className={`h-full rounded-full transition-all ${
+                                    isQuiz ? 'bg-[#FF5733]' : 'bg-accentIndigo'
+                                  }`}
                                   style={{ width: `${stat.percent}%` }}
                                 />
                               </div>
@@ -715,7 +739,7 @@ export default function AnalyticsPage() {
                     return (
                       <div className="flex flex-col sm:flex-row gap-6 items-center">
                         <div className="text-center sm:border-r border-[#E2E8F0] pr-6">
-                          <div className="text-3xl font-extrabold text-accentIndigo">{average}</div>
+                          <div className={`text-3xl font-extrabold ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`}>{average}</div>
                           <div className="text-[9px] font-bold text-textMuted uppercase mt-1">Điểm trung bình</div>
                         </div>
 
