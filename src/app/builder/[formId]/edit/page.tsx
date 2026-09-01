@@ -569,13 +569,17 @@ export default function BuilderPage() {
             type="button"
             onClick={handleSurveyAudit}
             disabled={isAuditing || questions.length === 0}
-            className="flex items-center gap-1.5 border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm disabled:opacity-50"
+            className={`flex items-center gap-1.5 border transition px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm disabled:opacity-50 ${
+              isQuiz
+                ? 'border-[#FFD8C7] bg-[#FFF0E6] text-[#FF5733] hover:bg-[#FFE4D6]'
+                : 'border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700'
+            }`}
             title="AI Kiểm định chất lượng bảng hỏi & độ tin cậy"
           >
             {isAuditing ? (
-              <Loader2 size={14} className="animate-spin text-indigo-600" />
+              <Loader2 size={14} className={`animate-spin ${isQuiz ? 'text-[#FF5733]' : 'text-indigo-600'}`} />
             ) : (
-              <ShieldCheck size={14} className="text-indigo-600" />
+              <ShieldCheck size={14} className={isQuiz ? 'text-[#FF5733]' : 'text-indigo-600'} />
             )}
             <span className="hidden md:inline">Kiểm định AI</span>
           </button>
@@ -603,17 +607,23 @@ export default function BuilderPage() {
       {/* Main 2-Column Layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Column: Component Panel */}
-        <aside className="w-full md:w-64 border-r border-[#E2E8F0] bg-white p-5 overflow-hidden flex-shrink-0">
-          <h2 className="text-xs font-bold text-textMuted uppercase tracking-wider mb-4">Các loại câu hỏi</h2>
+        <aside className={`w-full md:w-64 border-r p-5 overflow-hidden flex-shrink-0 transition-colors ${
+          isQuiz ? 'bg-[#FFF9F2]/80 border-[#FFE4D6]' : 'bg-white border-[#E2E8F0]'
+        }`}>
+          <h2 className={`text-xs font-extrabold uppercase tracking-wider mb-4 flex items-center gap-1.5 ${
+            isQuiz ? 'text-[#FF5733]' : 'text-textMuted'
+          }`}>
+            Các loại câu hỏi
+          </h2>
           <div className="flex flex-col gap-2">
             {[
-              { type: 'info', label: 'Giới thiệu / Ghi chú (Info)', icon: HelpCircle },
-              { type: 'radio', label: 'Trắc nghiệm 1 đáp án', icon: CheckSquare },
-              { type: 'checkbox', label: 'Nhiều đáp án (Checkbox)', icon: CheckSquare },
-              { type: 'text', label: 'Trả lời ngắn (Text)', icon: Settings },
-              { type: 'voice', label: 'Ghi âm giọng nói (Voice)', icon: Sparkles },
-              { type: 'video', label: 'Phỏng vấn Video & Camera', icon: Video },
-              { type: 'scale', label: 'Thang đo rating 1-5', icon: Settings },
+              { type: 'info', label: 'Giới thiệu / Ghi chú', icon: HelpCircle },
+              { type: 'radio', label: 'Chọn 1 đáp án', icon: CheckSquare },
+              { type: 'checkbox', label: 'Chọn nhiều đáp án', icon: CheckSquare },
+              { type: 'text', label: 'Trả lời ngắn', icon: Settings },
+              { type: 'voice', label: 'Ghi âm giọng nói', icon: Sparkles },
+              { type: 'video', label: 'Phỏng vấn Video', icon: Video },
+              { type: 'scale', label: 'Thang điểm (Rating)', icon: Settings },
               // { type: 'dropdown', label: 'Dropdown danh sách', icon: ListPlus },
               { type: 'date', label: 'Ngày / Giờ', icon: Settings },
               { type: 'file', label: 'Tải lên tệp đính kèm', icon: Settings }
@@ -621,9 +631,13 @@ export default function BuilderPage() {
               <button
                 key={item.type}
                 onClick={() => addQuestion(item.type)}
-                className="flex items-center gap-3 w-full text-left border border-[#E2E8F0] hover:border-accentIndigo hover:bg-indigo-50/10 transition p-3 rounded-lg text-xs font-medium text-textMain"
+                className={`flex items-center gap-3 w-full text-left border transition-all p-3 rounded-xl text-xs font-bold ${
+                  isQuiz
+                    ? 'border-[#FFE0D1] bg-white hover:border-[#FF5733] hover:bg-[#FFF0E6] text-slate-800 hover:text-[#FF5733] shadow-sm'
+                    : 'border-[#E2E8F0] bg-white hover:border-accentIndigo hover:bg-indigo-50/10 text-slate-800'
+                }`}
               >
-                <item.icon size={14} className="text-textMuted" />
+                <item.icon size={14} className={isQuiz ? 'text-[#FF5733]' : 'text-textMuted'} />
                 {item.label}
               </button>
             ))}
@@ -671,16 +685,16 @@ export default function BuilderPage() {
                   type="button"
                   onClick={handleAiQuizAnalyze}
                   disabled={isAnalyzingQuiz || questions.length === 0}
-                  className="flex items-center gap-1.5 border border-indigo-100 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 disabled:opacity-50 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
+                  className="flex items-center gap-1.5 border border-orange-200 bg-orange-50/70 hover:bg-orange-100 text-[#FF5733] disabled:opacity-50 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
                 >
                   {isAnalyzingQuiz ? (
                     <>
-                      <Loader2 size={12} className="animate-spin" />
+                      <Loader2 size={12} className="animate-spin text-[#FF5733]" />
                       AI Đang phân tích...
                     </>
                   ) : (
                     <>
-                      <Sparkles size={12} />
+                      <Sparkles size={12} className="text-[#FF5733]" />
                       AI Tự động tìm Đáp án
                     </>
                   )}
@@ -691,46 +705,68 @@ export default function BuilderPage() {
 
           {/* AI Generator Summary Dashboard */}
           {showAiDashboard && description && (
-            <div className="bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border border-indigo-100 rounded-2xl p-5 mb-6 relative animate-slide-in shadow-sm">
+            <div className={`border rounded-2xl p-5 mb-6 relative animate-slide-in shadow-sm transition-colors ${
+              isQuiz
+                ? 'bg-[#FFF0E6] border-[#FFD8C7] text-slate-800'
+                : 'bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border-indigo-100/60 text-textMain'
+            }`}>
               <button 
                 onClick={() => setShowAiDashboard(false)}
-                className="absolute top-4 right-4 text-textMuted hover:text-textMain transition"
+                className={`absolute top-4 right-4 transition ${
+                  isQuiz ? 'text-[#FF5733] hover:text-orange-800' : 'text-textMuted hover:text-textMain'
+                }`}
                 title="Đóng tóm tắt"
               >
                 <Plus className="rotate-45" size={16} />
               </button>
               
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-lg bg-accentIndigo text-white flex items-center justify-center">
+                <div className={`w-6 h-6 rounded-lg text-white flex items-center justify-center ${
+                  isQuiz ? 'bg-[#FF5733]' : 'bg-accentIndigo'
+                }`}>
                   <Sparkles size={12} />
                 </div>
-                <h3 className="font-bold text-xs text-textMain uppercase tracking-wider">
-                  Bản thiết kế khảo sát của AI
+                <h3 className={`font-extrabold text-xs uppercase tracking-wider ${
+                  isQuiz ? 'text-[#FF5733]' : 'text-textMain'
+                }`}>
+                  {isQuiz ? 'BẢN THIẾT KẾ BÀI TẬP CỦA AI' : 'BẢN THIẾT KẾ KHẢO SÁT CỦA AI'}
                 </h3>
               </div>
 
-              <p className="text-[11px] text-textMuted leading-relaxed mb-4 max-w-3xl bg-white/70 p-3.5 rounded-xl border border-indigo-200/20 max-h-32 overflow-y-auto">
+              <p className={`text-[11px] leading-relaxed mb-4 max-w-3xl p-3.5 rounded-xl border max-h-32 overflow-y-auto ${
+                isQuiz
+                  ? 'bg-white/80 border-[#FFE0D1] text-slate-800'
+                  : 'bg-white/70 border-indigo-200/20 text-textMuted'
+              }`}>
                 {description}
               </p>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-white border border-indigo-100/30 p-3 rounded-xl flex flex-col">
+                <div className={`p-3 rounded-xl flex flex-col border ${
+                  isQuiz ? 'bg-white border-[#FFE0D1]' : 'bg-white border-indigo-100/30'
+                }`}>
                   <span className="text-[9px] font-bold text-textMuted uppercase tracking-wider mb-0.5">Tổng số câu hỏi</span>
-                  <span className="text-base font-extrabold text-accentIndigo">{questions.length}</span>
+                  <span className={`text-base font-extrabold ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`}>{questions.length}</span>
                 </div>
 
-                <div className="bg-white border border-indigo-100/30 p-3 rounded-xl flex flex-col">
+                <div className={`p-3 rounded-xl flex flex-col border ${
+                  isQuiz ? 'bg-white border-[#FFE0D1]' : 'bg-white border-indigo-100/30'
+                }`}>
                   <span className="text-[9px] font-bold text-textMuted uppercase tracking-wider mb-0.5">Mốc phân nhánh</span>
                   <span className="text-base font-extrabold text-amber-600">{questions.filter(q => q.is_branching_question).length}</span>
                 </div>
 
-                <div className="bg-white border border-indigo-100/30 p-3 rounded-xl flex flex-col">
+                <div className={`p-3 rounded-xl flex flex-col border ${
+                  isQuiz ? 'bg-white border-[#FFE0D1]' : 'bg-white border-indigo-100/30'
+                }`}>
                   <span className="text-[9px] font-bold text-textMuted uppercase tracking-wider mb-0.5">Câu hỏi rẽ nhánh</span>
                   <span className="text-base font-extrabold text-purple-600">{questions.filter(q => q.visibility_type === 'conditional').length}</span>
                 </div>
 
-                <div className="bg-white border border-indigo-100/30 p-3 rounded-xl flex flex-col">
+                <div className={`p-3 rounded-xl flex flex-col border ${
+                  isQuiz ? 'bg-white border-[#FFE0D1]' : 'bg-white border-indigo-100/30'
+                }`}>
                   <span className="text-[9px] font-bold text-textMuted uppercase tracking-wider mb-0.5">Câu hỏi bắt buộc</span>
                   <span className="text-base font-extrabold text-red-500">{questions.filter(q => q.is_required).length}</span>
                 </div>

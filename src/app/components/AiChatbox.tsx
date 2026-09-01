@@ -1021,7 +1021,11 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {/* Suggestion Bubble Notification Popup */}
         {!isOpen && showTooltip && (
-          <div className="bg-gradient-to-r from-accentIndigo to-accentViolet text-white rounded-2xl shadow-xl p-3 px-4 text-[11px] font-medium max-w-[240px] relative animate-bounce border border-indigo-300/20 mr-1 flex items-start gap-2 pr-6">
+          <div className={`text-white rounded-2xl shadow-xl p-3 px-4 text-[11px] font-medium max-w-[240px] relative animate-bounce mr-1 flex items-start gap-2 pr-6 ${
+            isQuiz
+              ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] border border-orange-300/30 shadow-orange-500/20'
+              : 'bg-gradient-to-r from-accentIndigo to-accentViolet border border-indigo-300/20'
+          }`}>
             <button 
               onClick={handleDismissTooltip}
               className="absolute top-1.5 right-1.5 text-white/70 hover:text-white transition"
@@ -1055,14 +1059,22 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
       {isOpen && (
         <div className="fixed bottom-24 right-6 w-96 h-[550px] max-h-[calc(100vh-140px)] bg-white border border-[#E2E8F0] shadow-2xl rounded-2xl z-50 overflow-hidden flex flex-col animate-slide-in">
           {/* Header Panel */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-3 border-b border-indigo-100 flex items-center justify-between flex-shrink-0">
+          <div className={`px-4 py-3 border-b flex items-center justify-between flex-shrink-0 ${
+            isQuiz
+              ? 'bg-[#FFF0E6] border-[#FFD8C7]'
+              : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100'
+          }`}>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-accentIndigo text-white flex items-center justify-center">
+              <div className={`w-6 h-6 rounded-lg text-white flex items-center justify-center ${
+                isQuiz ? 'bg-[#FF5733]' : 'bg-accentIndigo'
+              }`}>
                 <Sparkles size={12} />
               </div>
               <div>
                 <h3 className="font-bold text-xs text-textMain uppercase tracking-wide">Trợ lý thiết kế AI</h3>
-                <span className="text-[9px] text-accentIndigo font-semibold">LLaMA-3.1 Active</span>
+                <span className={`text-[9px] font-semibold ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`}>
+                  {isQuiz ? 'Học tập AI Active' : 'LLaMA-3.1 Active'}
+                </span>
               </div>
             </div>
             
