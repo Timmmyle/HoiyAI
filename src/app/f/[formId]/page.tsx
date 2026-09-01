@@ -44,6 +44,7 @@ export default function ResponderPage() {
   const [answers, setAnswers] = useState<{ [questionId: string]: any }>({});
   const [audioBlobs, setAudioBlobs] = useState<{ [questionId: string]: Blob }>({});
   const [audioUrls, setAudioUrls] = useState<{ [questionId: string]: string }>({});
+  const [confirmedQuestions, setConfirmedQuestions] = useState<{ [questionId: string]: boolean }>({});
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,6 +101,20 @@ export default function ResponderPage() {
       }
     }
     return { min, correct };
+  };
+
+  const checkQuestionCorrectness = (q: Question, userAns: any) => {
+    if (!userAns) return false;
+    if (q.type === 'checkbox') {
+      const { correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+      const userArr = getCheckboxArray(userAns);
+      return (
+        correct.length > 0 &&
+        correct.every((c: string) => userArr.includes(c)) &&
+        userArr.length === correct.length
+      );
+    }
+    return String(userAns).trim().toLowerCase() === String(q.correct_answer || '').trim().toLowerCase();
   };
 
   // Load Form Data
@@ -511,6 +526,127 @@ export default function ResponderPage() {
 
   // Submitted Screen
   if (isSubmitted) {
+    if (isQuiz) {
+      const evaluableQs = questions.filter(isQuestionVisible).filter(q => q.type !== 'info');
+      const results = evaluableQs.map(q => {
+        const userAns = answers[q.id];
+        const isCorrect = checkQuestionCorrectness(q, userAns);
+        return { q, userAns, isCorrect };
+      });
+
+      const totalCount = results.length;
+      const correctCount = results.filter(r => r.isCorrect).length;
+      const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+      const wrongList = results.filter(r => !r.isCorrect);
+
+      let gradeBadge = { label: 'Xuất sắc! 🌟', color: 'bg-emerald-500 text-white' };
+      if (scorePercent < 50) gradeBadge = { label: 'Cần cố gắng 💡', color: 'bg-rose-500 text-white' };
+      else if (scorePercent < 75) gradeBadge = { label: 'Khá 👍', color: 'bg-amber-500 text-white' };
+      else if (scorePercent < 90) gradeBadge = { label: 'Giỏi 🎉', color: 'bg-indigo-500 text-white' };
+
+      return (
+        <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto px-6 py-10 justify-center animate-fade-in">
+          {/* Header Score Card */}
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 p-6 sm:p-8 rounded-3xl text-center space-y-4 shadow-sm mb-6">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF5733] bg-orange-100 px-3 py-1 rounded-full inline-block">
+              🏆 Kết Quả Bài Kiểm Tra
+            </span>
+            <div>
+              <div className="text-4xl sm:text-5xl font-black text-[#FF5733] mb-1">
+                {scorePercent} <span className="text-xl font-bold text-slate-600">/ 100 điểm</span>
+              </div>
+              <p className="text-xs font-bold text-slate-700">
+                Bạn đã trả lời đúng <span className="text-[#FF5733]">{correctCount}</span> / {totalCount} câu hỏi ({scorePercent}%)
+              </p>
+            </div>
+            <div>
+              <span className={`text-xs font-bold px-3.5 py-1 rounded-full inline-block shadow-sm ${gradeBadge.color}`}>
+                Xếp loại: {gradeBadge.label}
+              </span>
+            </div>
+          </div>
+
+          {/* AI Wrong Answer Analysis Section */}
+          <div className="bg-white border border-[#FFE4D6] p-6 rounded-3xl shadow-sm space-y-5 mb-6">
+            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-100 text-[#FF5733] flex items-center justify-center font-bold text-sm">
+                💡
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-900">Phân Tích Chi Tiết Lỗi Sai & Lời Giải AI</h3>
+                <p className="text-[11px] text-textMuted">Tóm tắt các câu trả lời chưa chính xác và hướng dẫn tự ôn tập</p>
+              </div>
+            </div>
+
+            {wrongList.length === 0 ? (
+              <div className="bg-emerald-50/60 border border-emerald-200/80 p-5 rounded-2xl text-center space-y-1">
+                <div className="text-2xl">🎉</div>
+                <h4 className="font-extrabold text-xs text-emerald-900">Tuyệt vời! Bạn không làm sai câu nào!</h4>
+                <p className="text-[11px] text-emerald-700">Kiến thức của bạn rất vững vàng. Hãy tiếp tục phát huy ở các bài tập sau!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Các câu hỏi làm sai ({wrongList.length} câu):</span>
+                  <span className="text-[10px] text-rose-500 font-bold">❌ Cần xem lại</span>
+                </div>
+
+                <div className="space-y-3.5 max-h-[400px] overflow-y-auto pr-1">
+                  {wrongList.map(({ q, userAns }, idx) => {
+                    let userAnsText = '';
+                    if (Array.isArray(userAns)) userAnsText = userAns.join(', ');
+                    else if (userAns) userAnsText = String(userAns);
+                    else userAnsText = '(Bỏ trống câu trả lời)';
+
+                    let correctAnsText = '';
+                    if (q.type === 'checkbox') {
+                      const { correct } = parseCheckboxCorrectAnswer(q.correct_answer);
+                      correctAnsText = correct.join(', ');
+                    } else {
+                      correctAnsText = q.correct_answer || 'Chưa cập nhật đáp án chuẩn';
+                    }
+
+                    return (
+                      <div key={q.id} className="bg-[#FFF9F2] border border-[#FFE0D1] p-4 rounded-2xl space-y-2.5 text-xs">
+                        <div className="font-bold text-slate-900 leading-snug">
+                          Câu {idx + 1}: {q.text}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                          <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-rose-900">
+                            <span className="font-bold block text-[10px] uppercase text-rose-600 mb-0.5">Lựa chọn của bạn:</span>
+                            <span>❌ {userAnsText}</span>
+                          </div>
+                          <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl text-emerald-900">
+                            <span className="font-bold block text-[10px] uppercase text-emerald-600 mb-0.5">Đáp án đúng:</span>
+                            <span>✓ {correctAnsText}</span>
+                          </div>
+                        </div>
+
+                        {q.explanation && (
+                          <div className="bg-white border border-[#FFE0D1] p-3 rounded-xl text-[11px] text-slate-700 leading-relaxed">
+                            <span className="font-bold text-[#FF5733] block mb-0.5">💡 Giải thích từ AI:</span>
+                            {q.explanation}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => router.push('/')}
+            className="w-full bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-extrabold py-3 rounded-2xl text-xs transition shadow-md shadow-orange-500/20"
+          >
+            Quay lại Trang Chủ
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-16 h-16 rounded-full bg-green-50 border border-green-200 text-green-600 flex items-center justify-center mb-6">
@@ -888,20 +1024,12 @@ export default function ResponderPage() {
                 </div>
               )}
 
-              {/* Practice Mode Feedback Card */}
-              {isQuiz && answers[activeQuestion.id] && (
+              {/* Practice Mode Feedback Card (Only shown after confirmation) */}
+              {isQuiz && confirmedQuestions[activeQuestion.id] && answers[activeQuestion.id] && (
                 <div className="mt-6 pt-4 border-t border-slate-100 animate-fade-in">
                   {(() => {
                     const userAns = answers[activeQuestion.id];
-                    let isCorrect = false;
-
-                    if (activeQuestion.type === 'checkbox') {
-                      const { correct } = parseCheckboxCorrectAnswer(activeQuestion.correct_answer);
-                      const userArr = getCheckboxArray(userAns);
-                      isCorrect = correct.length > 0 && correct.every((c: string) => userArr.includes(c)) && userArr.length === correct.length;
-                    } else {
-                      isCorrect = String(userAns).trim().toLowerCase() === String(activeQuestion.correct_answer || '').trim().toLowerCase();
-                    }
+                    const isCorrect = checkQuestionCorrectness(activeQuestion, userAns);
 
                     return (
                       <div className={`p-4 rounded-2xl border ${
@@ -923,7 +1051,7 @@ export default function ResponderPage() {
             </div>
           </div>
 
-          {/* Navigation Control Area */}
+          {/* Navigation & Confirmation Control Area */}
           <div className="flex items-center justify-between border-t border-[#F1F5F9] pt-4 mt-6">
             <button
               onClick={handlePrev}
@@ -934,27 +1062,79 @@ export default function ResponderPage() {
               Quay lại
             </button>
 
-            {isLastQuestion ? (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="bg-gradient-to-r from-accentIndigo to-accentViolet text-white hover:opacity-90 px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-md"
-              >
-                {isSubmitting ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Send size={14} />
-                )}
-                Nộp khảo sát
-              </button>
+            {isQuiz ? (
+              // Quiz Mode Confirmation & Next Button Flow
+              !confirmedQuestions[activeQuestion.id] && activeQuestion.type !== 'info' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const userAns = answers[activeQuestion.id];
+                    const isAnsEmpty = activeQuestion.type === 'checkbox'
+                      ? getCheckboxArray(userAns).length === 0
+                      : (!userAns || String(userAns).trim() === '');
+
+                    if (activeQuestion.is_required && isAnsEmpty) {
+                      toast("Vui lòng chọn hoặc nhập đáp án trước khi xác nhận.", "error");
+                      return;
+                    }
+
+                    if (isAnsEmpty) {
+                      toast("Bạn chưa chọn đáp án nào.", "info");
+                    }
+
+                    setConfirmedQuestions(prev => ({ ...prev, [activeQuestion.id]: true }));
+                  }}
+                  className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-md shadow-orange-500/20"
+                >
+                  <CheckCircle2 size={15} />
+                  Xác nhận đáp án
+                </button>
+              ) : isLastQuestion ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-md shadow-orange-500/20 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
+                  Nộp bài & Xem kết quả
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-md shadow-orange-500/20"
+                >
+                  Câu tiếp theo
+                  <ChevronRight size={16} />
+                </button>
+              )
             ) : (
-              <button
-                onClick={handleNext}
-                className="bg-textMain hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
-              >
-                Tiếp theo
-                <ChevronRight size={16} />
-              </button>
+              // Survey Mode Navigation
+              isLastQuestion ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-accentIndigo to-accentViolet text-white hover:opacity-90 px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-md"
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
+                  Nộp khảo sát
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="bg-textMain hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                >
+                  Tiếp theo
+                  <ChevronRight size={16} />
+                </button>
+              )
             )}
           </div>
         </div>
