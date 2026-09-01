@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { 
   Mic, MicOff, ChevronRight, ChevronLeft, Send, CheckCircle2, 
-  Loader2, Play, Volume2, AlertCircle, FileAudio, RotateCcw, Video
+  Loader2, Play, Volume2, AlertCircle, FileAudio, RotateCcw, Video, Target
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -637,12 +637,52 @@ export default function ResponderPage() {
             )}
           </div>
 
-          <button
-            onClick={() => router.push('/')}
-            className="w-full bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-extrabold py-3 rounded-2xl text-xs transition shadow-md shadow-orange-500/20"
-          >
-            Quay lại Trang Chủ
-          </button>
+          {/* Action Buttons: Retake Quiz & Go Home */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {
+                setAnswers({});
+                setConfirmedQuestions({});
+                setActiveIdx(0);
+                setIsSubmitted(false);
+                toast("Đã làm lại bài từ đầu! Chúc bạn đạt kết quả cao.", "info");
+              }}
+              className="flex-1 bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-extrabold py-3 px-4 rounded-2xl text-xs transition shadow-md shadow-orange-500/20 flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={15} />
+              Làm lại bài tập
+            </button>
+
+            {wrongList.length > 0 && wrongList.length < evaluableQs.length && (
+              <button
+                onClick={() => {
+                  const nextAnswers = { ...answers };
+                  const nextConfirmed = { ...confirmedQuestions };
+                  wrongList.forEach(w => {
+                    delete nextAnswers[w.q.id];
+                    delete nextConfirmed[w.q.id];
+                  });
+                  setAnswers(nextAnswers);
+                  setConfirmedQuestions(nextConfirmed);
+                  const firstWrongIdx = questions.findIndex(q => q.id === wrongList[0].q.id);
+                  if (firstWrongIdx !== -1) setActiveIdx(firstWrongIdx);
+                  setIsSubmitted(false);
+                  toast(`Chế độ Ôn lại: Chỉ làm lại ${wrongList.length} câu sai!`, "info");
+                }}
+                className="flex-1 bg-white border border-[#FFD8C7] hover:bg-[#FFF0E6] text-[#FF5733] font-extrabold py-3 px-4 rounded-2xl text-xs transition shadow-sm flex items-center justify-center gap-2"
+              >
+                <Target size={15} />
+                Chỉ làm lại {wrongList.length} câu sai
+              </button>
+            )}
+
+            <button
+              onClick={() => router.push('/')}
+              className="border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 px-5 rounded-2xl text-xs transition"
+            >
+              Quay lại Trang Chủ
+            </button>
+          </div>
         </div>
       );
     }
