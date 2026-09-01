@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { text } = await req.json();
+    const { text, is_quiz } = await req.json();
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const result = await generateFormFromText(text, userTier);
+    const result = await generateFormFromText(text, userTier, !!is_quiz);
 
     return NextResponse.json(result);
   } catch (error: any) {

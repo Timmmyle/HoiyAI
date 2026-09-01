@@ -23,6 +23,7 @@ export default function HomePage() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [generateMode, setGenerateMode] = useState<'survey' | 'quiz'>('survey');
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [ocrProgress, setOcrProgress] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -292,10 +293,14 @@ export default function HomePage() {
 
     setIsGenerating(true);
     try {
+      const isQuizMode = generateMode === 'quiz';
       const res = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: prompt })
+        body: JSON.stringify({ 
+          text: prompt,
+          is_quiz: isQuizMode 
+        })
       });
 
       const result = await res.json();
@@ -309,8 +314,9 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: formSchema.form_title || 'Khảo sát tạo bởi AI',
-          description: formSchema.ai_summary || `Khảo sát được tạo tự động bởi mô hình AI (${result.usedModel}).`,
+          title: formSchema.form_title || (isQuizMode ? 'Bài tập trắc nghiệm tạo bởi AI' : 'Khảo sát tạo bởi AI'),
+          description: formSchema.ai_summary || `Tự động khởi tạo bởi AI (${result.usedModel}).`,
+          is_quiz: isQuizMode,
           questions: formSchema.questions || []
         })
       });
@@ -320,7 +326,7 @@ export default function HomePage() {
         throw new Error(saveResult.error || 'Lỗi lưu trữ khảo sát vào DB.');
       }
 
-      toast("Tạo khảo sát thành công bằng AI!", "success");
+      toast(`Tạo thành công ${isQuizMode ? 'Bài tập trắc nghiệm' : 'Khảo sát'} bằng AI!`, "success");
       router.push(`/builder/${saveResult.formId}/edit`);
     } catch (err: any) {
       console.error(err);
@@ -526,11 +532,53 @@ export default function HomePage() {
             </div>
           ) : (
             <>
+              {/* Mode Switch Toggle: Survey vs. Learning/Quiz */}
+              <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-textMuted uppercase tracking-wider">Chế độ tạo:</span>
+                  <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60 shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setGenerateMode('survey')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        generateMode === 'survey'
+                          ? 'bg-white text-accentIndigo shadow-sm border border-slate-200'
+                          : 'text-textMuted hover:text-textMain'
+                      }`}
+                    >
+                      <span>📋 Khảo sát & Form</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGenerateMode('quiz')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        generateMode === 'quiz'
+                          ? 'bg-emerald-500 text-white shadow-sm'
+                          : 'text-textMuted hover:text-textMain'
+                      }`}
+                    >
+                      <span>🎓 Bài tập & Học tập (Quiz)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <span className="text-[10px] text-textMuted font-medium">
+                  {generateMode === 'quiz' 
+                    ? '✨ AI sẽ tự động sinh đáp án đúng & thiết lập Chế độ Học tập'
+                    : '💡 Tối ưu hóa luồng câu hỏi khảo sát & phân nhánh'}
+                </span>
+              </div>
+
               {/* Text Area */}
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder='Ví dụ: "Tạo khảo sát đo lường chất lượng phục vụ của cửa hàng F&B. Chia làm 2 nhóm khách hàng mua mang đi và ăn tại chỗ..."'
+                placeholder={
+                  generateMode === 'quiz'
+                    ? 'Ví dụ: "Tạo bài kiểm tra 10 câu trắc nghiệm Tiếng Anh trình độ B1 về thì Hiện tại hoàn thành..." hoặc tải đề thi Word/PDF lên...'
+                    : 'Ví dụ: "Tạo khảo sát đo lường chất lượng phục vụ của cửa hàng F&B. Chia làm 2 nhóm khách hàng mua mang đi và ăn tại chỗ..."'
+                }
                 rows={4}
                 className="w-full text-sm outline-none resize-none border-0 placeholder-slate-400 bg-transparent text-textMain mb-4"
               />

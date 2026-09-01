@@ -111,7 +111,7 @@ function preprocessText(text: string): string {
   return cleaned;
 }
 
-export async function generateFormFromText(text: string, tier = 'FREE'): Promise<{ data: any; usedModel: string }> {
+export async function generateFormFromText(text: string, tier = 'FREE', isQuiz = false): Promise<{ data: any; usedModel: string }> {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is not defined in environment variables.');
   }
