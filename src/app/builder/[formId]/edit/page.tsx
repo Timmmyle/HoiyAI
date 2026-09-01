@@ -1384,25 +1384,39 @@ export default function BuilderPage() {
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-accentIndigo flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${
+                isQuiz
+                  ? 'bg-orange-50 border-orange-100 text-[#FF5733]'
+                  : 'bg-indigo-50 border-indigo-100 text-accentIndigo'
+              }`}>
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <h3 className="font-extrabold text-base text-textMain">Kết quả Kiểm định Khảo sát AI</h3>
+                <h3 className="font-extrabold text-base text-slate-900">
+                  {isQuiz ? 'Kết quả Kiểm định Bài tập AI' : 'Kết quả Kiểm định Khảo sát AI'}
+                </h3>
                 <p className="text-[11px] text-textMuted">Đánh giá tính hợp lý, thời gian điền & phát hiện định hướng</p>
               </div>
             </div>
 
             {/* Score Banner */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/60 p-4 rounded-2xl flex items-center justify-between mb-5">
+            <div className={`p-4 rounded-2xl flex items-center justify-between mb-5 border ${
+              isQuiz
+                ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100/60'
+                : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100/60'
+            }`}>
               <div>
                 <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Điểm Chất lượng</span>
-                <span className="text-2xl font-black text-accentIndigo">{auditResult.score}/100</span>
-                <span className="ml-2 text-xs font-bold text-indigo-700">({auditResult.grade})</span>
+                <span className={`text-2xl font-black ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`}>
+                  {auditResult.score}/100
+                </span>
+                <span className={`ml-2 text-xs font-bold ${isQuiz ? 'text-orange-700' : 'text-indigo-700'}`}>
+                  ({auditResult.grade})
+                </span>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Ước tính thời gian điền</span>
-                <span className="text-xs font-extrabold text-textMain">{auditResult.estimatedTime || '3-5 phút'}</span>
+                <span className="text-xs font-extrabold text-slate-900">{auditResult.estimatedTime || '3-5 phút'}</span>
               </div>
             </div>
 
@@ -1412,7 +1426,7 @@ export default function BuilderPage() {
                 <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> Điểm mạnh của Bảng hỏi
                 </h4>
-                <ul className="flex flex-col gap-1.5 text-xs text-textMain bg-emerald-50/40 p-3 rounded-xl border border-emerald-100/60">
+                <ul className="flex flex-col gap-1.5 text-xs text-slate-800 bg-emerald-50/40 p-3 rounded-xl border border-emerald-100/60">
                   {auditResult.strengths.map((str: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-emerald-500 font-bold">•</span>
@@ -1431,7 +1445,7 @@ export default function BuilderPage() {
                 </h4>
                 <div className="flex flex-col gap-2">
                   {auditResult.issues.map((issue: any, idx: number) => (
-                    <div key={idx} className="bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl text-xs text-textMain flex items-start gap-2">
+                    <div key={idx} className="bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl text-xs text-slate-800 flex items-start gap-2">
                       <span className="text-amber-600 font-bold">⚠️</span>
                       <div>
                         {issue.questionId && (
@@ -1448,13 +1462,19 @@ export default function BuilderPage() {
             {/* Recommendations */}
             {auditResult.recommendations && auditResult.recommendations.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${
+                  isQuiz ? 'text-[#FF5733]' : 'text-indigo-700'
+                }`}>
                   <Sparkles size={14} /> Khuyên khuyên tối ưu từ AI
                 </h4>
-                <ul className="flex flex-col gap-1.5 text-xs text-textMain bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/60">
+                <ul className={`flex flex-col gap-1.5 text-xs text-slate-800 p-3 rounded-xl border ${
+                  isQuiz
+                    ? 'bg-orange-50/40 border-orange-100/60'
+                    : 'bg-indigo-50/40 border-indigo-100/60'
+                }`}>
                   {auditResult.recommendations.map((rec: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-indigo-500 font-bold">💡</span>
+                      <span className={`font-bold ${isQuiz ? 'text-[#FF5733]' : 'text-indigo-500'}`}>💡</span>
                       <span>{rec}</span>
                     </li>
                   ))}
@@ -1467,7 +1487,11 @@ export default function BuilderPage() {
                 type="button"
                 onClick={handleFixWithAi}
                 disabled={isFixingWithAi}
-                className="flex-1 bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-90 transition text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                className={`flex-1 transition text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 ${
+                  isQuiz
+                    ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 shadow-orange-500/20'
+                    : 'bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-90'
+                }`}
               >
                 {isFixingWithAi ? (
                   <Loader2 size={15} className="animate-spin" />
