@@ -349,9 +349,10 @@ export default function HomePage() {
     let isQuizTemplate = false;
 
     if (templateName === 'Trang trắng') {
-      title = 'Khảo sát chưa đặt tên';
+      title = generateMode === 'quiz' ? 'Bài tập chưa đặt tên' : 'Khảo sát chưa đặt tên';
       templateQuestions = [];
-    } else if (templateName === 'Đánh giá Event') {
+      isQuizTemplate = generateMode === 'quiz';
+    } else if (templateName === 'Đánh giá sự kiện' || templateName === 'Đánh giá Event') {
       title = 'Khảo sát phản hồi Sự kiện';
       templateQuestions = [
         { type: 'radio', text: 'Bạn cảm nhận như thế nào về sự kiện này?', options: ['Rất hài lòng', 'Hài lòng', 'Bình thường', 'Không hài lòng'], is_branching: false },
@@ -365,13 +366,34 @@ export default function HomePage() {
         { type: 'textarea', text: 'Lý do bạn không muốn sử dụng dịch vụ?', options: [], visibility: { condition_question_id: 'q1', condition_value: 'Không, cảm ơn' } },
         { type: 'scale', text: 'Đánh giá chất lượng phục vụ của chúng tôi', options: [], is_branching: false }
       ];
-    } else if (templateName === 'Bài tập trắc nghiệm') {
+    } else if (templateName === 'Bài tập trắc nghiệm' || templateName === 'Bài kiểm tra 10 câu') {
       title = 'Bài kiểm tra Kiến thức tổng hợp';
       isQuizTemplate = true;
       templateQuestions = [
-        { type: 'radio', text: 'Thủ đô của Việt Nam là gì?', options: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'], correct_answer: 'Hà Nội', is_branching: false },
-        { type: 'dropdown', text: '1 + 1 bằng mấy?', options: ['1', '2', '3', '4'], correct_answer: '2', is_branching: false },
-        { type: 'radio', text: 'Trí tuệ nhân tạo viết tắt là gì?', options: ['IA', 'AI', 'AR', 'VR'], correct_answer: 'AI', is_branching: false }
+        { type: 'radio', text: 'Thủ đô của Việt Nam là gì?', options: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'], correct_answer: 'Hà Nội', explanation: 'Hà Nội là thủ đô của Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.', is_branching: false },
+        { type: 'radio', text: '1 + 1 bằng mấy?', options: ['1', '2', '3', '4'], correct_answer: '2', explanation: 'Phép cộng cơ bản: 1 cộng 1 bằng 2.', is_branching: false },
+        { type: 'radio', text: 'Trí tuệ nhân tạo viết tắt là gì?', options: ['IA', 'AI', 'AR', 'VR'], correct_answer: 'AI', explanation: 'AI là viết tắt của Artificial Intelligence.', is_branching: false }
+      ];
+    } else if (templateName === 'Ôn tập Flashcard / Quiz') {
+      title = 'Bài ôn tập Quiz & Flashcard';
+      isQuizTemplate = true;
+      templateQuestions = [
+        { type: 'radio', text: 'Đơn vị đo cường độ dòng điện là gì?', options: ['Ampe (A)', 'Volt (V)', 'Watt (W)', 'Ohm (Ω)'], correct_answer: 'Ampe (A)', explanation: 'Cường độ dòng điện được đo bằng Ampe (A).', is_branching: false },
+        { type: 'radio', text: 'Hành tinh nào gần Mặt Trời nhất trong Hệ Mặt Trời?', options: ['Sao Thủy', 'Sao Kim', 'Trái Đất', 'Sao Hỏa'], correct_answer: 'Sao Thủy', explanation: 'Sao Thủy (Mercury) là hành tinh gần Mặt Trời nhất.', is_branching: false }
+      ];
+    } else if (templateName === 'Game Đố vui AI') {
+      title = 'Game Đố Vui Kiến Thức AI';
+      isQuizTemplate = true;
+      templateQuestions = [
+        { type: 'radio', text: 'Nước nào có diện tích lớn nhất thế giới?', options: ['Nga', 'Canada', 'Trung Quốc', 'Mỹ'], correct_answer: 'Nga', explanation: 'Nga là quốc gia có diện tích lớn nhất thế giới (~17.1 triệu km²).', is_branching: false },
+        { type: 'radio', text: 'Loài động vật có vú duy nhất biết bay là gì?', options: ['Dơi', 'Sóc bay', 'Chim bói cá', 'Đại bàng'], correct_answer: 'Dơi', explanation: 'Dơi là loài động vật có vú duy nhất có khả năng bay thực sự.', is_branching: false }
+      ];
+    } else if (templateName === 'Đề thi phân loại K12') {
+      title = 'Đề Thi Thử Phân Loại K12';
+      isQuizTemplate = true;
+      templateQuestions = [
+        { type: 'radio', text: 'Phương trình x^2 - 4 = 0 có các nghiệm là:', options: ['x = ±2', 'x = 2', 'x = 4', 'Vô nghiệm'], correct_answer: 'x = ±2', difficulty: 'medium', explanation: 'x^2 = 4 => x = ±2.', is_branching: false },
+        { type: 'radio', text: 'Thành phần chính của không khí là khí nào?', options: ['Nitơ (N2)', 'Oxi (O2)', 'Cacbonic (CO2)', 'Heli (He)'], correct_answer: 'Nitơ (N2)', difficulty: 'easy', explanation: 'Khí Nitơ chiếm khoảng 78% thể tích không khí.', is_branching: false }
       ];
     } else {
       title = 'Khảo sát ý kiến nhân viên';
@@ -435,18 +457,24 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className={`min-h-screen font-sans flex flex-col transition-colors duration-300 ${
+      generateMode === 'quiz' ? 'bg-[#FFF9F2] text-slate-800' : 'bg-[#F8FAFC] text-textMain'
+    }`}>
       {/* 1. Header / Navbar */}
-      <header className="border-b border-[#E2E8F0] bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/logo.jpg" alt="hoiyAi Logo" className="h-11 w-11 object-contain rounded-lg border border-slate-100" />
-          <span className="font-extrabold text-xl text-textMain tracking-wide">HoiyAI</span>
+      <header className={`border-b transition-colors px-6 py-4 flex items-center justify-between ${
+        generateMode === 'quiz' ? 'border-[#FFE4D6] bg-white/80 backdrop-blur-md' : 'border-[#E2E8F0] bg-white'
+      }`}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
+          <img src="/logo.jpg" alt="hoiyAi Logo" className="h-11 w-11 object-contain rounded-xl border border-slate-100 shadow-sm" />
+          <span className="font-black text-xl tracking-tight text-slate-900">
+            Hoiy<span className={generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'}>AI</span>
+          </span>
         </div>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-textMuted">
-          <a href="#features" className="hover:text-textMain transition">Tính năng</a>
-          <a href="#aichat" className="hover:text-textMain transition">AI Chat</a>
-          <a href="#pricing" className="hover:text-textMain transition">Bảng giá</a>
+          <a href="#features" className={`transition ${generateMode === 'quiz' ? 'hover:text-[#FF5733]' : 'hover:text-textMain'}`}>Tính năng</a>
+          <a href="#aichat" className={`transition ${generateMode === 'quiz' ? 'hover:text-[#FF5733]' : 'hover:text-textMain'}`}>AI Chat</a>
+          <a href="#pricing" className={`transition ${generateMode === 'quiz' ? 'hover:text-[#FF5733]' : 'hover:text-textMain'}`}>Bảng giá</a>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -460,7 +488,9 @@ export default function HomePage() {
                 className="flex items-center gap-2.5 hover:bg-slate-50 transition px-2.5 py-1.5 rounded-lg border border-slate-100 bg-slate-50/50"
                 title="Cài đặt tài khoản"
               >
-                <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 text-accentIndigo flex items-center justify-center text-xs font-bold font-mono">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono border ${
+                  generateMode === 'quiz' ? 'bg-orange-50 border-orange-200 text-[#FF5733]' : 'bg-indigo-50 border-indigo-100 text-accentIndigo'
+                }`}>
                   {userProfileName ? userProfileName[0].toUpperCase() : session.user.email[0].toUpperCase()}
                 </div>
                 <div className="text-left hidden sm:block">
@@ -485,7 +515,9 @@ export default function HomePage() {
           ) : (
             <button
               onClick={handleLogin}
-              className="bg-textMain hover:bg-slate-800 transition text-white px-4 py-2 rounded text-xs font-bold"
+              className={`transition text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm ${
+                generateMode === 'quiz' ? 'bg-[#FF5733] hover:bg-orange-600' : 'bg-textMain hover:bg-slate-800'
+              }`}
             >
               Đăng nhập / Đăng ký
             </button>
@@ -495,17 +527,56 @@ export default function HomePage() {
 
       {/* 2. Hero & AI Prompt Box Center */}
       <main className="flex-1 flex flex-col items-center justify-center max-w-4xl w-full mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">
-            <Sparkles size={14} />
+        <div className="text-center mb-6">
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold mb-3 transition-colors ${
+            generateMode === 'quiz' 
+              ? 'bg-[#FFF0E6] border border-[#FFD8C7] text-[#FF5733]' 
+              : 'bg-slate-100 border border-slate-200 text-slate-800'
+          }`}>
+            <Sparkles size={14} className={generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-slate-700'} />
             Hệ thống tạo khảo sát thông minh AI
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-textMain">
-            Tạo khảo sát chuyên nghiệp trong vài giây
+
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-slate-900">
+            {generateMode === 'quiz' ? 'Biến bài học thành trò chơi trong vài giây' : 'Tạo khảo sát chuyên nghiệp trong vài giây'}
           </h1>
-          <p className="text-sm text-textMuted max-w-lg mx-auto leading-relaxed">
-            Nhập prompt mong muốn hoặc kéo thả tài liệu Word, PDF hay hình ảnh vào ô bên dưới. AI sẽ tự động sinh form, phân nhánh và dịch giọng nói.
+
+          <p className="text-xs sm:text-sm text-textMuted max-w-lg mx-auto leading-relaxed">
+            {generateMode === 'quiz'
+              ? 'Kể AI nghe bạn muốn dạy gì, hoặc thả file bài giảng vào. AI sẽ tự dựng câu đố, chấm điểm và động viên học sinh liền tay.'
+              : 'Nhập prompt hoặc tải tài liệu Word, PDF hay hình ảnh. AI sẽ tự động dựng form, phân nhánh và dịch giọng nói.'}
           </p>
+        </div>
+
+        {/* Mode Switch Pill Component */}
+        <div className="flex justify-center mb-6">
+          <div className={`p-1.5 rounded-full border shadow-sm inline-flex items-center gap-1.5 transition-all ${
+            generateMode === 'quiz' ? 'bg-white border-[#FFE0D1]' : 'bg-white border-slate-200'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setGenerateMode('survey')}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold transition-all ${
+                generateMode === 'survey'
+                  ? 'bg-[#1E293B] text-white shadow-md'
+                  : 'bg-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>📋 Chuyên nghiệp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setGenerateMode('quiz')}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold transition-all ${
+                generateMode === 'quiz'
+                  ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white shadow-md shadow-orange-500/20'
+                  : 'bg-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>🎨 Học tập vui</span>
+            </button>
+          </div>
         </div>
 
         {/* AI Center Box */}
@@ -514,79 +585,54 @@ export default function HomePage() {
           onDragOver={handleDrag}
           onDragLeave={handleDrag}
           onDrop={handleDrop}
-          className={`w-full bg-white rounded-xl border-2 transition-all p-5 shadow-sm flex flex-col relative ${dragActive ? 'border-accentIndigo bg-indigo-50/20' : 'border-[#E2E8F0]'
-            }`}
+          className={`w-full bg-white rounded-3xl border transition-all p-6 shadow-sm flex flex-col relative overflow-hidden ${
+            dragActive
+              ? 'border-accentIndigo bg-indigo-50/20'
+              : generateMode === 'quiz'
+              ? 'border-[#FFE0D1] shadow-xl shadow-orange-500/5'
+              : 'border-slate-200/80 shadow-sm'
+          }`}
         >
+          {generateMode === 'quiz' && (
+            <div className="absolute -top-12 -right-12 w-44 h-44 bg-gradient-to-bl from-[#FFE8B6] to-transparent rounded-full blur-2xl pointer-events-none opacity-80" />
+          )}
+
           {isGenerating ? (
             <div className="flex flex-col items-center justify-center py-8 text-center animate-pulse">
               <div className="relative mb-4">
-                <div className="w-12 h-12 rounded-full border-2 border-indigo-100 border-t-accentIndigo animate-spin" />
-                <Sparkles className="absolute inset-0 m-auto text-accentIndigo animate-bounce" size={18} />
+                <div className={`w-12 h-12 rounded-full border-2 animate-spin ${
+                  generateMode === 'quiz' ? 'border-orange-100 border-t-[#FF5733]' : 'border-indigo-100 border-t-accentIndigo'
+                }`} />
+                <Sparkles className={`absolute inset-0 m-auto animate-bounce ${
+                  generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'
+                }`} size={18} />
               </div>
               <h3 className="font-bold text-xs text-textMain mb-1">
-                AI đang tạo khảo sát của bạn...
+                {generateMode === 'quiz' ? 'AI đang thiết kế bài học vui của bạn...' : 'AI đang tạo khảo sát của bạn...'}
               </h3>
               <p className="text-[10px] text-textMuted max-w-sm leading-relaxed px-4">
-                Hệ thống đang chạy qua chuỗi tự động cấu trúc phân mảnh nâng cao (gpt-5.4-nano &rarr; gpt-5.6-luna &rarr; gpt-5-mini &rarr; gpt-5-nano). Quá trình này có thể mất vài giây, vui lòng không tắt trình duyệt.
+                Hệ thống đang chạy qua chuỗi tự động cấu trúc nâng cao. Quá trình này có thể mất vài giây, vui lòng không tắt trình duyệt.
               </p>
             </div>
           ) : (
             <>
-              {/* Mode Switch Toggle: Survey vs. Learning/Quiz */}
-              <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-textMuted uppercase tracking-wider">Chế độ tạo:</span>
-                  <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60 shadow-inner">
-                    <button
-                      type="button"
-                      onClick={() => setGenerateMode('survey')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        generateMode === 'survey'
-                          ? 'bg-white text-accentIndigo shadow-sm border border-slate-200'
-                          : 'text-textMuted hover:text-textMain'
-                      }`}
-                    >
-                      <span>📋 Khảo sát & Form</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setGenerateMode('quiz')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        generateMode === 'quiz'
-                          ? 'bg-emerald-500 text-white shadow-sm'
-                          : 'text-textMuted hover:text-textMain'
-                      }`}
-                    >
-                      <span>🎓 Bài tập & Học tập (Quiz)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <span className="text-[10px] text-textMuted font-medium">
-                  {generateMode === 'quiz' 
-                    ? '✨ AI sẽ tự động sinh đáp án đúng & thiết lập Chế độ Học tập'
-                    : '💡 Tối ưu hóa luồng câu hỏi khảo sát & phân nhánh'}
-                </span>
-              </div>
-
               {/* Text Area */}
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={
                   generateMode === 'quiz'
-                    ? 'Ví dụ: "Tạo bài kiểm tra 10 câu trắc nghiệm Tiếng Anh trình độ B1 về thì Hiện tại hoàn thành..." hoặc tải đề thi Word/PDF lên...'
-                    : 'Ví dụ: "Tạo khảo sát đo lường chất lượng phục vụ của cửa hàng F&B. Chia làm 2 nhóm khách hàng mua mang đi và ăn tại chỗ..."'
+                    ? 'VD: Bài trắc nghiệm ôn Sử lớp 8, 10 câu, có gợi ý và huy hiệu khi làm đúng hết.'
+                    : 'VD: Khảo sát đo lường chất lượng phục vụ quán cà phê, gửi cho khách sau khi thanh toán.'
                 }
                 rows={4}
-                className="w-full text-sm outline-none resize-none border-0 placeholder-slate-400 bg-transparent text-textMain mb-4"
+                className="w-full text-sm outline-none resize-none border-0 placeholder-slate-400 bg-transparent text-slate-800 mb-4 leading-relaxed relative z-10"
               />
 
               {/* Progress / Status bars */}
               {(isParsingFile || ocrProgress) && (
-                <div className="mb-4 bg-slate-50 border border-[#E2E8F0] p-3 rounded flex items-center gap-3 text-xs text-textMuted">
-                  <Loader2 size={16} className="animate-spin text-accentIndigo" />
+                <div className="mb-4 bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center gap-3 text-xs text-textMuted">
+                  <Loader2 size={16} className={`animate-spin ${generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'}`} />
                   <span>
                     {isParsingFile && "Đang giải nén văn bản từ tệp..."}
                     {ocrProgress && ocrProgress}
@@ -595,7 +641,7 @@ export default function HomePage() {
               )}
 
               {/* Action Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-[#F1F5F9] pt-4 gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-100 pt-4 gap-4 relative z-10">
                 <div className="flex items-center gap-2">
                   <input
                     type="file"
@@ -614,20 +660,25 @@ export default function HomePage() {
                       fileInputRef.current?.click();
                     }}
                     disabled={isParsingFile || !!ocrProgress}
-                    className={`flex items-center gap-2 text-xs border border-[#E2E8F0] transition px-3 py-2 rounded font-semibold bg-white ${userTier === 'FREE' ? 'cursor-not-allowed opacity-70 text-slate-400' : 'hover:border-accentIndigo hover:text-accentIndigo text-textMuted'}`}
+                    className={`flex items-center gap-2 text-xs border border-slate-200/80 transition px-3.5 py-2 rounded-xl font-semibold bg-white ${
+                      userTier === 'FREE' ? 'cursor-not-allowed opacity-70 text-slate-400' : 'hover:border-slate-300 text-slate-600'
+                    }`}
                   >
                     <FileUp size={14} />
-                    Đính kèm File (.pdf, .docx, .png) {userTier === 'FREE' && '🔒'}
+                    Đính kèm file (.pdf, .docx, .png) {userTier === 'FREE' && '🔒'}
                   </button>
                 </div>
 
                 <button
                   onClick={handleGenerateSurvey}
                   disabled={isParsingFile || !!ocrProgress}
-                  className="bg-gradient-to-r from-accentIndigo to-accentViolet text-white hover:opacity-90 transition px-5 py-2 rounded text-xs font-bold flex items-center gap-2 shadow-sm"
+                  className={`text-white transition px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm ${
+                    generateMode === 'quiz'
+                      ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 shadow-orange-500/20'
+                      : 'bg-[#1E293B] hover:bg-[#0F172A]'
+                  }`}
                 >
-                  Tạo Survey bằng AI
-                  <ArrowRight size={14} />
+                  {generateMode === 'quiz' ? 'Tạo bài học vui →' : 'Tạo Survey bằng AI →'}
                 </button>
               </div>
             </>
@@ -637,26 +688,32 @@ export default function HomePage() {
         {/* 3. Template strip */}
         <div className="w-full mt-12">
           <h2 className="text-xs font-bold text-textMuted uppercase tracking-wider mb-4 text-left">
-            Tạo Nhanh (Templates)
+            TẠO NHANH (TEMPLATES)
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 w-full">
-            {[
-              { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số không' },
-              { name: 'Đánh giá Event', icon: CheckCircle2, desc: 'Phản hồi sau sự kiện' },
-              { name: 'Khảo sát khách hàng', icon: Users, desc: 'Khảo sát khách hàng' },
-              { name: 'Bài tập trắc nghiệm', icon: HelpCircle, desc: 'Bài kiểm tra có đáp án đúng' },
-              { name: 'Nhân sự', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ' }
-            ].map((tmpl, idx) => (
+            {(generateMode === 'quiz' ? [
+              { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số 0', bg: 'bg-orange-50 text-[#FF5733] border-orange-100' },
+              { name: 'Bài kiểm tra 10 câu', icon: CheckCircle2, desc: 'Bài kiểm tra có đáp án', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+              { name: 'Ôn tập Flashcard / Quiz', icon: Users, desc: 'Ôn thi & kiểm tra kiến thức', bg: 'bg-purple-50 text-purple-600 border-purple-100' },
+              { name: 'Game Đố vui AI', icon: HelpCircle, desc: 'Trò chơi kích thích học tập', bg: 'bg-amber-50 text-amber-600 border-amber-100' },
+              { name: 'Đề thi phân loại K12', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ', bg: 'bg-[#FFF0E6] text-[#FF5733] border-[#FFD8C7]' }
+            ] : [
+              { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số không', bg: 'bg-sky-50 text-sky-600 border-sky-100' },
+              { name: 'Đánh giá sự kiện', icon: CheckCircle2, desc: 'Mẫu hỏi sau sự kiện', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+              { name: 'Khảo sát khách hàng', icon: Users, desc: 'Khảo sát khách hàng', bg: 'bg-purple-50 text-purple-600 border-purple-100' },
+              { name: 'Bài tập trắc nghiệm', icon: HelpCircle, desc: 'Bài kiểm tra có đáp án', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+              { name: 'Nhân sự', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ', bg: 'bg-indigo-50 text-indigo-600 border-indigo-100' }
+            ]).map((tmpl, idx) => (
               <button
                 key={idx}
                 onClick={() => handleCreateFromTemplate(tmpl.name)}
                 disabled={isGenerating}
-                className="bg-white hover:border-accentIndigo hover:shadow-md transition text-left border border-[#E2E8F0] p-4 rounded-xl shadow-sm flex flex-col items-start w-full"
+                className="bg-white hover:shadow-md transition text-left border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col items-start w-full"
               >
-                <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center text-textMuted mb-3 border border-[#E2E8F0]">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 border ${tmpl.bg}`}>
                   <tmpl.icon size={16} />
                 </div>
-                <div className="font-semibold text-xs text-textMain mb-1">{tmpl.name}</div>
+                <div className="font-bold text-xs text-textMain mb-1">{tmpl.name}</div>
                 <div className="text-[10px] text-textMuted leading-tight">{tmpl.desc}</div>
               </button>
             ))}
@@ -666,25 +723,27 @@ export default function HomePage() {
         {/* Khảo sát của bạn (My Surveys) */}
         {session && (
           <div className="w-full mt-12 text-left">
-            <div className="flex items-center justify-between mb-4 border-b border-[#E2E8F0] pb-2">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200/80 pb-2">
               <h2 className="text-xs font-bold text-textMuted uppercase tracking-wider">
-                Khảo sát của bạn ({mySurveys.length})
+                KHẢO SÁT CỦA BẠN ({mySurveys.length})
               </h2>
               <button
                 onClick={fetchMySurveys}
-                className="text-[10px] text-accentIndigo hover:underline font-bold"
+                className={`text-[10px] hover:underline font-bold transition-colors ${
+                  generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'
+                }`}
               >
                 Làm mới danh sách
               </button>
             </div>
 
             {loadingSurveys ? (
-              <div className="py-8 flex items-center justify-center gap-2 text-xs text-textMuted bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
-                <Loader2 size={14} className="animate-spin text-accentIndigo" />
+              <div className="py-8 flex items-center justify-center gap-2 text-xs text-textMuted bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <Loader2 size={14} className={`animate-spin ${generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'}`} />
                 Đang tải danh sách khảo sát...
               </div>
             ) : mySurveys.length === 0 ? (
-              <div className="py-12 text-center text-xs text-textMuted bg-white border border-dashed border-[#E2E8F0] rounded-xl shadow-sm">
+              <div className="py-12 text-center text-xs text-textMuted bg-white border border-dashed border-slate-200 rounded-2xl shadow-sm">
                 Bạn chưa tạo khảo sát nào. Hãy nhập mô tả ở ô phía trên hoặc chọn một mẫu tạo nhanh để bắt đầu!
               </div>
             ) : (
@@ -692,12 +751,16 @@ export default function HomePage() {
                 {mySurveys.map((form) => (
                   <div
                     key={form.id}
-                    className="bg-white border border-[#E2E8F0] hover:border-slate-300 hover:shadow-md transition p-5 rounded-xl shadow-sm flex flex-col justify-between"
+                    className="bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition p-5 rounded-2xl shadow-sm flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-bold text-accentIndigo uppercase tracking-wide bg-indigo-50 px-2 py-0.5 rounded">
-                          Khảo sát
+                        <span className={`text-[9px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full border ${
+                          form.is_quiz 
+                            ? 'bg-[#FFF0E6] text-[#FF5733] border-[#FFD8C7]' 
+                            : 'bg-indigo-50 text-accentIndigo border-indigo-100'
+                        }`}>
+                          {form.is_quiz ? 'Bài tập' : 'Form'}
                         </span>
                         <div className="flex items-center gap-1 text-[9px] text-textMuted">
                           <Calendar size={10} />
@@ -713,11 +776,15 @@ export default function HomePage() {
                     </div>
 
                     {/* Action Row */}
-                    <div className="flex items-center justify-between border-t border-[#F1F5F9] pt-3 flex-wrap gap-2">
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 flex-wrap gap-2">
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => router.push(`/builder/${form.id}/edit`)}
-                          className="flex items-center gap-1 border border-[#E2E8F0] hover:bg-slate-50 text-[10px] text-textMain px-2.5 py-1.5 rounded-lg transition font-semibold"
+                          className={`flex items-center gap-1 border text-[10px] px-3 py-1.5 rounded-xl transition font-semibold ${
+                            generateMode === 'quiz' 
+                              ? 'bg-[#FFF9F2] border-[#FFE0D1] text-[#FF5733] hover:bg-[#FFF0E6]' 
+                              : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-textMain'
+                          }`}
                           title="Chỉnh sửa form"
                         >
                           <Edit size={10} />
@@ -726,7 +793,11 @@ export default function HomePage() {
 
                         <button
                           onClick={() => router.push(`/analytics/${form.id}`)}
-                          className="flex items-center gap-1 border border-[#E2E8F0] hover:bg-slate-50 text-[10px] text-textMain px-2.5 py-1.5 rounded-lg transition font-semibold"
+                          className={`flex items-center gap-1 border text-[10px] px-3 py-1.5 rounded-xl transition font-semibold ${
+                            generateMode === 'quiz' 
+                              ? 'bg-[#FFF9F2] border-[#FFE0D1] text-[#FF5733] hover:bg-[#FFF0E6]' 
+                              : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-textMain'
+                          }`}
                           title="Xem kết quả"
                         >
                           <BarChart3 size={10} />
