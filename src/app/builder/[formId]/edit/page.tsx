@@ -806,15 +806,21 @@ export default function BuilderPage() {
 
                   <div
                     onClick={() => setSelectedQuestionId(q.id)}
-                    className={`bg-white rounded-xl border p-5 transition relative cursor-pointer ${
+                    className={`bg-white rounded-2xl border p-5 transition relative cursor-pointer ${
                       selectedQuestionId === q.id 
-                        ? 'border-accentIndigo shadow-sm ring-1 ring-accentIndigo/10' 
-                        : 'border-[#E2E8F0] hover:border-slate-300'
+                        ? isQuiz
+                          ? 'border-[#FF5733] shadow-md ring-2 ring-orange-500/20'
+                          : 'border-accentIndigo shadow-sm ring-1 ring-accentIndigo/10' 
+                        : isQuiz
+                          ? 'border-[#FFE0D1] hover:border-[#FF5733]'
+                          : 'border-[#E2E8F0] hover:border-slate-300'
                     }`}
                   >
                   {/* Top line question type & order manipulation */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-accentIndigo uppercase tracking-wide">
+                    <div className={`flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide ${
+                      isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'
+                    }`}>
                       <span>Câu {idx + 1}:</span>
                       <select
                         value={q.type}
@@ -827,7 +833,11 @@ export default function BuilderPage() {
                           updateQuestion(q.id, updates);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="font-bold text-accentIndigo bg-indigo-50 hover:bg-indigo-100 transition px-2 py-0.5 rounded cursor-pointer uppercase text-[10px] outline-none border border-transparent hover:border-accentIndigo/30"
+                        className={`font-bold transition px-2.5 py-1 rounded-xl cursor-pointer uppercase text-[10px] outline-none border ${
+                          isQuiz
+                            ? 'text-[#FF5733] bg-[#FFF0E6] border-[#FFD8C7] hover:bg-[#FFE4D6]'
+                            : 'text-accentIndigo bg-indigo-50 border-transparent hover:border-accentIndigo/30'
+                        }`}
                       >
                         <option value="info">Màn hình thông tin / Ghi chú</option>
                         <option value="radio">Chọn 1 đáp án</option>
@@ -1163,8 +1173,8 @@ export default function BuilderPage() {
 
                         {/* Checkbox Min Choices Configuration */}
                         {q.type === 'checkbox' && (
-                          <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
-                            <span className="font-semibold text-textMain">Số đáp án chọn tối thiểu:</span>
+                          <div className="flex items-center gap-2 border-l border-slate-200/80 pl-4">
+                            <span className="font-semibold text-slate-800">Số đáp án chọn tối thiểu:</span>
                             <select
                               value={(() => {
                                 const val = q.correct_answer;
@@ -1193,7 +1203,11 @@ export default function BuilderPage() {
                                   correct_answer: JSON.stringify({ min: nextMin, correct: nextCorrect }) 
                                 });
                               }}
-                              className="border border-[#E2E8F0] rounded px-2.5 py-1 text-xs text-textMain outline-none bg-white font-medium cursor-pointer"
+                              className={`rounded-xl px-3 py-1.5 text-xs outline-none bg-white font-bold cursor-pointer transition-colors border ${
+                                isQuiz
+                                  ? 'border-[#FFE0D1] focus:border-[#FF5733] text-slate-800'
+                                  : 'border-[#E2E8F0] focus:border-accentIndigo text-slate-800'
+                              }`}
                             >
                               {Array.from({ length: Math.max(1, q.options.length) }, (_, i) => i + 1).map((val) => (
                                 <option key={val} value={val.toString()}>
@@ -1209,7 +1223,7 @@ export default function BuilderPage() {
                       <div className="border-t border-slate-200/60 pt-3">
                         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                           <div className="w-full md:w-auto">
-                            <span className="font-semibold text-textMain block mb-1">Điều kiện hiển thị:</span>
+                            <span className="font-semibold text-slate-800 block mb-1">Điều kiện hiển thị:</span>
                             <select
                               value={q.visibility_type}
                               onChange={(e) => {
@@ -1220,7 +1234,11 @@ export default function BuilderPage() {
                                   condition_value: val === 'always' ? null : q.condition_value
                                 });
                               }}
-                              className="border border-[#E2E8F0] rounded p-1.5 text-xs text-textMain outline-none bg-white w-full md:w-56"
+                              className={`rounded-xl p-2 text-xs outline-none bg-white w-full md:w-56 font-bold cursor-pointer transition-colors border ${
+                                isQuiz
+                                  ? 'border-[#FFE0D1] focus:border-[#FF5733] text-slate-800'
+                                  : 'border-[#E2E8F0] focus:border-accentIndigo text-slate-800'
+                              }`}
                             >
                               <option value="always">Luôn hiển thị (Chung)</option>
                               <option value="conditional">Hiển thị có điều kiện (Phân nhánh)</option>
@@ -1255,7 +1273,11 @@ export default function BuilderPage() {
                                       condition_value: defaultVal || null
                                     });
                                   }}
-                                  className="w-full border border-[#E2E8F0] rounded p-1.5 text-xs text-textMain bg-white outline-none cursor-pointer"
+                                  className={`w-full rounded-xl p-2 text-xs bg-white outline-none font-bold cursor-pointer transition-colors border ${
+                                    isQuiz
+                                      ? 'border-[#FFE0D1] focus:border-[#FF5733] text-slate-800'
+                                      : 'border-[#E2E8F0] focus:border-accentIndigo text-slate-800'
+                                  }`}
                                 >
                                   <option value="">-- Chọn câu hỏi --</option>
                                   {(() => {
@@ -1285,7 +1307,11 @@ export default function BuilderPage() {
                                   <select
                                     value={q.condition_value || ''}
                                     onChange={(e) => updateQuestion(q.id, { condition_value: e.target.value })}
-                                    className="w-full border border-[#E2E8F0] rounded p-1.5 text-xs text-textMain bg-white outline-none cursor-pointer"
+                                    className={`w-full rounded-xl p-2 text-xs bg-white outline-none font-bold cursor-pointer transition-colors border ${
+                                      isQuiz
+                                        ? 'border-[#FFE0D1] focus:border-[#FF5733] text-slate-800'
+                                        : 'border-[#E2E8F0] focus:border-accentIndigo text-slate-800'
+                                    }`}
                                   >
                                     {(() => {
                                       const condQ = questions.find(k => k.id === q.condition_question_id);
