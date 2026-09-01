@@ -32,6 +32,7 @@ interface AiChatboxProps {
   selectedQuestionId: string | null;
   onQuestionsChange: (updatedQuestions: Question[]) => void;
   onSelectQuestion: (id: string | null) => void;
+  isQuiz?: boolean;
 }
 
 export default function AiChatbox({
@@ -39,7 +40,8 @@ export default function AiChatbox({
   questions,
   selectedQuestionId,
   onQuestionsChange,
-  onSelectQuestion
+  onSelectQuestion,
+  isQuiz = false
 }: AiChatboxProps) {
   const { toast } = useToast();
   
@@ -1029,7 +1031,7 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
             </button>
             <div className="mt-0.5">🤖</div>
             <span className="leading-normal cursor-pointer" onClick={() => setIsOpen(true)}>
-              Cần gợi ý hay chỉnh sửa câu hỏi bằng AI? Hãy hỏi tôi ngay!
+              {isQuiz ? 'Muốn thêm câu đố vui hay gợi ý hấp dẫn hơn?' : 'Cần gợi ý hay chỉnh sửa câu hỏi bằng AI?'}
             </span>
           </div>
         )}
@@ -1039,7 +1041,9 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
           className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-all transform hover:scale-105 active:scale-95 ${
             isOpen 
               ? 'bg-slate-600 rotate-90' 
-              : 'bg-gradient-to-tr from-accentIndigo to-accentViolet'
+              : isQuiz
+                ? 'bg-gradient-to-tr from-[#FF6B4A] to-[#FF5733] shadow-orange-500/20'
+                : 'bg-gradient-to-tr from-accentIndigo to-accentViolet'
           }`}
           title="Trợ lý AI thiết kế Form"
         >
