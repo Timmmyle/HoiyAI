@@ -20,6 +20,9 @@ interface Question {
   visibility_type: 'always' | 'conditional';
   condition_question_id?: string | null;
   condition_value?: string | null;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  explanation?: string | null;
+  topic?: string | null;
 }
 
 export default function ResponderPage() {
@@ -35,6 +38,7 @@ export default function ResponderPage() {
   // State
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  const [isQuiz, setIsQuiz] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: string]: any }>({});
@@ -78,6 +82,26 @@ export default function ResponderPage() {
     return [String(val)];
   };
 
+  const parseCheckboxCorrectAnswer = (val: any) => {
+    let min = 1;
+    let correct: string[] = [];
+    if (val) {
+      if (typeof val === 'string' && val.trim().startsWith('{')) {
+        try {
+          const parsed = JSON.parse(val);
+          min = parsed.min || 1;
+          const c = parsed.correct;
+          if (Array.isArray(c)) correct = c;
+          else if (c) correct = [c];
+        } catch {}
+      } else {
+        if (/^\d+$/.test(val)) min = parseInt(val, 10);
+        else correct = [val];
+      }
+    }
+    return { min, correct };
+  };
+
   // Load Form Data
   useEffect(() => {
     const loadForm = async () => {
@@ -90,6 +114,7 @@ export default function ResponderPage() {
 
         setFormTitle(data.form.title);
         setFormDescription(data.form.description || '');
+        setIsQuiz(data.form.is_quiz || false);
         setQuestions(data.questions || []);
       } catch (err: any) {
         toast(err.message || 'Lỗi tải biểu mẫu khảo sát.', 'error');
@@ -844,6 +869,39 @@ export default function ResponderPage() {
                   <div className="text-[9px] text-textMuted mt-2">
                     {answers[activeQuestion.id] ? `Đã chọn: ${answers[activeQuestion.id]}` : 'Hỗ trợ PDF, DOCX, Hình ảnh kích thước < 5MB'}
                   </div>
+                </div>
+              )}
+
+              {/* Practice Mode Feedback Card */}
+              {isQuiz && answers[activeQuestion.id] && (
+                <div className="mt-6 pt-4 border-t border-slate-100 animate-fade-in">
+                  {(() => {
+                    const userAns = answers[activeQuestion.id];
+                    let isCorrect = false;
+
+                    if (activeQuestion.type === 'checkbox') {
+                      const { correct } = parseCheckboxCorrectAnswer(activeQuestion.correct_answer);
+                      const userArr = getCheckboxArray(userAns);
+                      isCorrect = correct.length > 0 && correct.every((c: string) => userArr.includes(c)) && userArr.length === correct.length;
+                    } else {
+                      isCorrect = String(userAns).trim().toLowerCase() === String(activeQuestion.correct_answer || '').trim().toLowerCase();
+                    }
+
+                    return (
+                      <div className={`p-4 rounded-2xl border ${
+                        isCorrect ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900' : 'bg-rose-50/70 border-rose-200 text-rose-900'
+                      }`}>
+                        <div className="flex items-center gap-2 font-bold text-xs mb-1">
+                          <span>{isCorrect ? '✓ Đáp án chính xác!' : '✕ Chưa chính xác!'}</span>
+                        </div>
+                        {activeQuestion.explanation && (
+                          <p className="text-[11px] mt-1 leading-relaxed opacity-90">
+                            💡 <strong>Giải thích:</strong> {activeQuestion.explanation}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

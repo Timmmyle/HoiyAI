@@ -76,12 +76,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Bạn không có quyền sửa khảo sát này.' }, { status: 403 });
     }
 
-    const { title, description, is_quiz, questions } = await req.json();
+    const { title, description, is_quiz, learning_settings, questions } = await req.json();
 
     // 1. Update form info
     const { error: updateFormError } = await supabase
       .from('forms')
-      .update({ title, description, is_quiz: is_quiz || false })
+      .update({
+        title,
+        description,
+        is_quiz: is_quiz || false,
+        learning_settings: learning_settings || null
+      })
       .eq('id', formId);
 
     if (updateFormError) {
@@ -138,7 +143,10 @@ export async function PUT(
           is_branching_question: q.is_branching_question || q.is_branching || false,
           visibility_type: finalConditionId ? 'conditional' : 'always',
           condition_question_id: finalConditionId,
-          condition_value: q.condition_value || q.visibility?.condition_value || null
+          condition_value: q.condition_value || q.visibility?.condition_value || null,
+          difficulty: q.difficulty || 'medium',
+          explanation: q.explanation || null,
+          topic: q.topic || null
         };
       });
 

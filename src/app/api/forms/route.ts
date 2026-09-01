@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Chưa đăng nhập để thực hiện tác vụ này.' }, { status: 401 });
     }
 
-    const { title, description, is_quiz, questions } = await req.json();
+    const { title, description, is_quiz, learning_settings, questions } = await req.json();
 
     if (!title) {
       return NextResponse.json({ error: 'Khảo sát cần có tiêu đề.' }, { status: 400 });
@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         is_quiz: is_quiz || false,
+        learning_settings: learning_settings || null,
         user_id: user.id
       })
       .select()
@@ -138,7 +139,10 @@ export async function POST(req: NextRequest) {
           is_branching_question: q.is_branching || q.is_branching_question || false,
           visibility_type: finalConditionId ? 'conditional' : 'always',
           condition_question_id: finalConditionId,
-          condition_value: q.condition_value || q.visibility?.condition_value || null
+          condition_value: q.condition_value || q.visibility?.condition_value || null,
+          difficulty: q.difficulty || 'medium',
+          explanation: q.explanation || null,
+          topic: q.topic || null
         };
       });
 

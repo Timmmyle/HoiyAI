@@ -21,6 +21,9 @@ interface Question {
   visibility_type: 'always' | 'conditional';
   condition_question_id?: string | null;
   condition_value?: string | null;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  explanation?: string | null;
+  topic?: string | null;
 }
 
 // Helper to parse checkbox JSON structure safely with multiple correct answers support
@@ -73,6 +76,22 @@ export default function BuilderPage() {
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isQuiz, setIsQuiz] = useState(false);
+  const [learningSettings, setLearningSettings] = useState<any>({
+    shuffle_questions: false,
+    shuffle_answers: false,
+    attempts_limit: 0,
+    retake_mode: 'entire',
+    learning_mode: 'practice',
+    timer_type: 'none',
+    timer_value: 0,
+    points_per_question: 10,
+    streak_bonus: false,
+    fast_bonus: false,
+    negative_marking: false,
+    partial_credit: false
+  });
+  const [showLearningSettingsModal, setShowLearningSettingsModal] = useState(false);
+  const [learningSettingsTab, setLearningSettingsTab] = useState<'general' | 'mode' | 'scoring' | 'ai'>('general');
   const [isAnalyzingQuiz, setIsAnalyzingQuiz] = useState(false);
   const [auditResult, setAuditResult] = useState<any>(null);
   const [isAuditing, setIsAuditing] = useState(false);
@@ -103,6 +122,9 @@ export default function BuilderPage() {
       setTitle(data.form.title);
       setDescription(data.form.description || '');
       setIsQuiz(data.form.is_quiz || false);
+      if (data.form.learning_settings) {
+        setLearningSettings((prev: any) => ({ ...prev, ...data.form.learning_settings }));
+      }
       
       // Map questions
       if (data.questions) {
@@ -116,7 +138,10 @@ export default function BuilderPage() {
           is_branching_question: q.is_branching_question,
           visibility_type: q.visibility_type,
           condition_question_id: q.condition_question_id,
-          condition_value: q.condition_value
+          condition_value: q.condition_value,
+          difficulty: q.difficulty || 'medium',
+          explanation: q.explanation || null,
+          topic: q.topic || null
         }));
         setQuestions(mappedQuestions);
         if (mappedQuestions.length > 0) {
@@ -252,6 +277,7 @@ export default function BuilderPage() {
           title,
           description,
           is_quiz: isQuiz,
+          learning_settings: learningSettings,
           questions
         })
       });
@@ -593,6 +619,18 @@ export default function BuilderPage() {
                 <span className="text-xs font-semibold text-textMain">Bật Chế độ Học tập</span>
               </label>
 
+              {/* Learning Settings Modal Trigger */}
+              {isQuiz && (
+                <button
+                  type="button"
+                  onClick={() => setShowLearningSettingsModal(true)}
+                  className="flex items-center gap-1.5 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-sm"
+                >
+                  <Settings size={13} />
+                  Cài đặt Bài tập (Learning Settings)
+                </button>
+              )}
+
               {/* AI auto-setup button */}
               <button
                 type="button"
@@ -899,6 +937,64 @@ export default function BuilderPage() {
                       <div>
                         <strong>Màn hình thông tin/giới thiệu:</strong>
                         <p className="mt-0.5 text-textMuted">Người tham gia khảo sát sẽ chỉ đọc tiêu đề câu hỏi ở trên và bấm nút <strong>"Tiếp tục"</strong> để đi tiếp mà không cần điền bất kỳ đáp án nào.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Difficulty & Explanation Controls for Quiz Mode */}
+                  {isQuiz && q.type !== 'info' && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 pl-3 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/60 p-3 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-bold text-textMuted uppercase tracking-wider">Độ khó:</span>
+                          <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200 shadow-sm">
+                            {(['easy', 'medium', 'hard'] as const).map(diff => (
+                              <button
+                                key={diff}
+                                type="button"
+                                onClick={() => updateQuestion(q.id, { difficulty: diff })}
+                                className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                  (q.difficulty || 'medium') === diff
+                                    ? diff === 'easy'
+                                      ? 'bg-emerald-500 text-white shadow-sm'
+                                      : diff === 'medium'
+                                        ? 'bg-amber-500 text-white shadow-sm'
+                                        : 'bg-rose-500 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800'
+                                }`}
+                              >
+                                {diff === 'easy' ? 'Dễ (Easy)' : diff === 'medium' ? 'Vừa (Medium)' : 'Khó (Hard)'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Optional Topic Tag */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-textMuted uppercase">Chủ đề:</span>
+                          <input
+                            type="text"
+                            value={q.topic || ''}
+                            onChange={(e) => updateQuestion(q.id, { topic: e.target.value })}
+                            placeholder="Ví dụ: Đại số, Từ vựng..."
+                            className="text-[11px] border border-slate-200 focus:border-accentIndigo rounded px-2.5 py-1 outline-none bg-white w-36 shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Explanation Input */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                            <Sparkles size={11} /> Giải thích đáp án (Practice Mode Explanation):
+                          </label>
+                        </div>
+                        <textarea
+                          value={q.explanation || ''}
+                          onChange={(e) => updateQuestion(q.id, { explanation: e.target.value })}
+                          placeholder="Nhập lý do tại sao đáp án trên lại đúng (sẽ hiển thị ngay khi người học trả lời ở chế độ Luyện tập)..."
+                          className="w-full text-xs text-textMain outline-none border border-slate-200 focus:border-accentIndigo rounded-xl p-2.5 bg-white resize-y min-h-[50px] leading-relaxed shadow-sm"
+                        />
                       </div>
                     </div>
                   )}
@@ -1263,6 +1359,318 @@ export default function BuilderPage() {
                 className="px-5 border border-slate-200 hover:bg-slate-50 text-textMuted hover:text-textMain font-semibold py-2.5 rounded-xl text-xs transition"
               >
                 Đã hiểu & Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Learning Settings Modal */}
+      {showLearningSettingsModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto flex flex-col">
+            <button
+              onClick={() => setShowLearningSettingsModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition"
+            >
+              <Plus className="rotate-45" size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
+                <Settings size={20} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-textMain">Cài Đặt Bài Tập (Learning Settings)</h3>
+                <p className="text-[11px] text-textMuted">Cấu hình gameplay, thứ tự câu hỏi, timer, cách chấm điểm & chế độ học tập</p>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2 border-b border-slate-200 mb-5">
+              {[
+                { id: 'general', label: '1. Thứ tự & Số lượt' },
+                { id: 'mode', label: '2. Chế độ Học tập' },
+                { id: 'scoring', label: '3. Timer & Chấm điểm' },
+                { id: 'ai', label: '4. Ngân hàng & AI' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setLearningSettingsTab(tab.id as any)}
+                  className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 ${
+                    learningSettingsTab === tab.id
+                      ? 'border-accentIndigo text-accentIndigo'
+                      : 'border-transparent text-textMuted hover:text-textMain'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* TAB 1: General & Order */}
+            {learningSettingsTab === 'general' && (
+              <div className="space-y-4 text-xs">
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-textMain">Xáo trộn thứ tự (Shuffle)</h4>
+                  
+                  <label className="flex items-center justify-between cursor-pointer select-none">
+                    <div>
+                      <span className="font-semibold text-textMain block">Xáo trộn vị trí các câu hỏi (Shuffle questions)</span>
+                      <span className="text-[10px] text-textMuted">Mỗi lần làm bài, các câu hỏi sẽ xuất hiện ở vị trí ngẫu nhiên</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={!!learningSettings.shuffle_questions}
+                      onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, shuffle_questions: e.target.checked }))}
+                      className="w-4 h-4 rounded text-accentIndigo focus:ring-accentIndigo"
+                    />
+                  </label>
+
+                  <div className="border-t border-slate-200/60 pt-3">
+                    <label className="flex items-center justify-between cursor-pointer select-none">
+                      <div>
+                        <span className="font-semibold text-textMain block">Xáo trộn các tùy chọn đáp án (Shuffle answer choices)</span>
+                        <span className="text-[10px] text-textMuted">Thứ tự các phương án A, B, C, D sẽ được đổi chỗ ngẫu nhiên</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={!!learningSettings.shuffle_answers}
+                        onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, shuffle_answers: e.target.checked }))}
+                        className="w-4 h-4 rounded text-accentIndigo focus:ring-accentIndigo"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-textMain">Giới hạn số lần làm bài (Attempts)</h4>
+                  <div className="flex items-center gap-4">
+                    {[
+                      { val: 0, label: 'Không giới hạn' },
+                      { val: 1, label: 'Chỉ 1 lần' },
+                      { val: 3, label: 'Tối đa 3 lần' }
+                    ].map(item => (
+                      <button
+                        key={item.val}
+                        type="button"
+                        onClick={() => setLearningSettings((prev: any) => ({ ...prev, attempts_limit: item.val }))}
+                        className={`px-3 py-1.5 rounded-xl font-bold border text-xs transition ${
+                          learningSettings.attempts_limit === item.val
+                            ? 'bg-accentIndigo text-white border-accentIndigo shadow-sm'
+                            : 'bg-white border-slate-200 text-textMuted hover:text-textMain'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-textMain">Chế độ làm lại (Retake Mode)</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setLearningSettings((prev: any) => ({ ...prev, retake_mode: 'entire' }))}
+                      className={`p-3 rounded-xl border text-left transition ${
+                        learningSettings.retake_mode === 'entire'
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
+                          : 'bg-white border-slate-200 text-textMuted'
+                      }`}
+                    >
+                      <span className="block text-xs">Làm lại toàn bộ bài</span>
+                      <span className="text-[10px] font-normal text-textMuted">Tất cả các câu hỏi sẽ được làm lại từ đầu</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setLearningSettings((prev: any) => ({ ...prev, retake_mode: 'incorrect_only' }))}
+                      className={`p-3 rounded-xl border text-left transition ${
+                        learningSettings.retake_mode === 'incorrect_only'
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
+                          : 'bg-white border-slate-200 text-textMuted'
+                      }`}
+                    >
+                      <span className="block text-xs">Chỉ làm lại câu sai</span>
+                      <span className="text-[10px] font-normal text-textMuted">Chỉ giữ lại các câu trả lời sai để ôn luyện</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Learning Modes */}
+            {learningSettingsTab === 'mode' && (
+              <div className="space-y-3 text-xs">
+                {[
+                  {
+                    id: 'practice',
+                    name: 'Chế độ Luyện tập (Practice Mode)',
+                    badge: 'Khuyên dùng cho Học tập',
+                    desc: 'Hiển thị ngay lập tức đáp án đúng/sai & lời giải thích (Explanation) sau từng câu hỏi. Phù hợp để tự học và ôn tập.',
+                    color: 'emerald'
+                  },
+                  {
+                    id: 'test',
+                    name: 'Chế độ Kiểm tra (Test Mode)',
+                    badge: 'Đánh giá kiến thức',
+                    desc: 'Không hiển thị kết quả ngay. Chỉ công bố tổng điểm & đáp án đúng sau khi người nộp hoàn thành toàn bộ bài nộp.',
+                    color: 'indigo'
+                  },
+                  {
+                    id: 'exam',
+                    name: 'Chế độ Thi đấu / Thi thật (Exam Mode)',
+                    badge: 'Giám sát nghiêm ngặt',
+                    desc: 'Có đồng hồ đếm ngược. Ẩn hoàn toàn đáp án và không cho phép quay lại câu trước nếu được thiết lập.',
+                    color: 'rose'
+                  }
+                ].map(mode => (
+                  <div
+                    key={mode.id}
+                    onClick={() => setLearningSettings((prev: any) => ({ ...prev, learning_mode: mode.id }))}
+                    className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+                      learningSettings.learning_mode === mode.id
+                        ? 'bg-indigo-50/70 border-accentIndigo shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="learning_mode"
+                      checked={learningSettings.learning_mode === mode.id}
+                      onChange={() => {}}
+                      className="mt-1 text-accentIndigo focus:ring-accentIndigo"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-textMain">{mode.name}</h4>
+                        <span className="text-[9px] font-extrabold uppercase bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                          {mode.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-textMuted mt-1 leading-relaxed">{mode.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* TAB 3: Timer & Scoring */}
+            {learningSettingsTab === 'scoring' && (
+              <div className="space-y-4 text-xs">
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-textMain">Thời gian làm bài (Timer)</h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'none', label: 'Không giới hạn' },
+                      { id: 'per_question', label: 'Đếm ngược từng câu' },
+                      { id: 'total_quiz', label: 'Tổng thời gian bài' }
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setLearningSettings((prev: any) => ({ ...prev, timer_type: t.id }))}
+                        className={`p-2.5 rounded-xl border text-xs font-bold transition ${
+                          learningSettings.timer_type === t.id
+                            ? 'bg-accentIndigo text-white border-accentIndigo shadow-sm'
+                            : 'bg-white border-slate-200 text-textMuted'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {learningSettings.timer_type !== 'none' && (
+                    <div className="flex items-center gap-3 pt-2">
+                      <span className="font-semibold text-textMain">
+                        Thời gian {learningSettings.timer_type === 'per_question' ? '(giây / câu)' : '(phút / toàn bài)'}:
+                      </span>
+                      <input
+                        type="number"
+                        value={learningSettings.timer_value || 30}
+                        onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, timer_value: parseInt(e.target.value, 10) || 0 }))}
+                        className="w-24 border border-slate-300 rounded-xl px-3 py-1.5 font-bold outline-none text-center bg-white"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-textMain">Điểm số & Thưởng (Points & Bonuses)</h4>
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="font-semibold text-textMain">Điểm mỗi câu mặc định:</span>
+                    <input
+                      type="number"
+                      value={learningSettings.points_per_question || 10}
+                      onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, points_per_question: parseInt(e.target.value, 10) || 10 }))}
+                      className="w-20 border border-slate-300 rounded-xl px-3 py-1 font-bold outline-none text-center bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-2 border-t border-slate-200/60 pt-3">
+                    <label className="flex items-center justify-between cursor-pointer select-none">
+                      <span className="text-textMain">Điểm thưởng trả lời đúng liên tiếp (Streak Bonus)</span>
+                      <input
+                        type="checkbox"
+                        checked={!!learningSettings.streak_bonus}
+                        onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, streak_bonus: e.target.checked }))}
+                        className="w-4 h-4 rounded text-accentIndigo"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer select-none">
+                      <span className="text-textMain">Điểm phạt khi trả lời sai (Negative Marking)</span>
+                      <input
+                        type="checkbox"
+                        checked={!!learningSettings.negative_marking}
+                        onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, negative_marking: e.target.checked }))}
+                        className="w-4 h-4 rounded text-accentIndigo"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: AI & Bank */}
+            {learningSettingsTab === 'ai' && (
+              <div className="space-y-4 text-xs">
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 p-5 rounded-2xl text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white text-accentIndigo flex items-center justify-center mx-auto shadow-sm">
+                    <Sparkles size={24} />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-textMain">Sinh thêm câu hỏi tự động với AI</h4>
+                  <p className="text-[11px] text-textMuted max-w-md mx-auto leading-relaxed">
+                    AI sẽ dựa trên tài liệu gốc hoặc các câu hỏi hiện tại để sinh thêm các câu hỏi trắc nghiệm mới, tránh trùng lặp và phân loại độ khó tự động.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLearningSettingsModal(false);
+                      toast("Tính năng sinh thêm câu hỏi AI nâng cao (Generate More Questions) sẽ có ở khung xem trước!", "info");
+                    }}
+                    className="bg-accentIndigo hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-sm transition"
+                  >
+                    ✨ Mở Bảng Sinh Câu Hỏi AI
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Action Buttons */}
+            <div className="flex items-center justify-between pt-4 mt-6 border-t border-slate-100">
+              <span className="text-[10px] text-textMuted">Tất cả thay đổi sẽ được áp dụng khi nhấn "Lưu khảo sát"</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLearningSettingsModal(false);
+                  toast("Đã lưu các thiết lập Cài đặt Bài tập!", "success");
+                }}
+                className="bg-accentIndigo hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition shadow-sm"
+              >
+                Hoàn tất Cài đặt
               </button>
             </div>
           </div>
