@@ -848,6 +848,10 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
               text: updateItem.text !== undefined ? updateItem.text : q.text,
               type: updateItem.type !== undefined ? updateItem.type : q.type,
               options: updateItem.options !== undefined ? updateItem.options : q.options,
+              correct_answer: updateItem.correct_answer !== undefined ? updateItem.correct_answer : q.correct_answer,
+              explanation: updateItem.explanation !== undefined ? updateItem.explanation : (q as any).explanation,
+              difficulty: updateItem.difficulty !== undefined ? updateItem.difficulty : (q as any).difficulty,
+              topic: updateItem.topic !== undefined ? updateItem.topic : (q as any).topic,
               is_branching_question: updateItem.is_branching_question !== undefined ? updateItem.is_branching_question : q.is_branching_question,
               visibility_type: updateItem.condition_question_id !== undefined 
                 ? (updateItem.condition_question_id ? 'conditional' : 'always') 
@@ -860,7 +864,32 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
         });
 
         onQuestionsChange(updatedQuestions);
-        toast(`Đã cập nhật phân nhánh thành công ${modifiedCount} câu hỏi!`, 'success');
+        toast(`Đã cập nhật câu hỏi & đáp án thành công cho ${modifiedCount} câu!`, 'success');
+      } else if (actionName === 'set_correct_answers') {
+        const { answers_list } = params;
+        if (!answers_list || !Array.isArray(answers_list)) {
+          toast('Danh sách đáp án không hợp lệ.', 'error');
+          return;
+        }
+
+        let modifiedCount = 0;
+        updatedQuestions = updatedQuestions.map(q => {
+          const updateItem = answers_list.find(a => findQuestionIdByAiRef(a.question_id || a.id) === q.id);
+          if (updateItem) {
+            modifiedCount++;
+            return {
+              ...q,
+              correct_answer: updateItem.correct_answer !== undefined ? updateItem.correct_answer : (updateItem.answer !== undefined ? updateItem.answer : q.correct_answer),
+              explanation: updateItem.explanation !== undefined ? updateItem.explanation : (q as any).explanation,
+              difficulty: updateItem.difficulty !== undefined ? updateItem.difficulty : (q as any).difficulty,
+              topic: updateItem.topic !== undefined ? updateItem.topic : (q as any).topic
+            };
+          }
+          return q;
+        });
+
+        onQuestionsChange(updatedQuestions);
+        toast(`Đã áp dụng đáp án AI chuẩn xác cho ${modifiedCount} câu hỏi!`, 'success');
       } else if (actionName === 'replace_questions') {
         const { remove_ids, questions_list, position_after_question_id } = params;
         if (!Array.isArray(remove_ids) || !Array.isArray(questions_list)) {
@@ -1104,7 +1133,7 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
               }}
               className={`flex-1 text-center py-2 border-b-2 transition ${
                 isGlobalMode 
-                  ? 'border-accentIndigo text-accentIndigo bg-white' 
+                  ? isQuiz ? 'border-[#FF5733] text-[#FF5733] bg-white font-extrabold' : 'border-accentIndigo text-accentIndigo bg-white'
                   : 'border-transparent text-textMuted hover:text-textMain'
               }`}
             >
@@ -1123,7 +1152,7 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
               }}
               className={`flex-1 text-center py-2 border-b-2 transition ${
                 !isGlobalMode 
-                  ? 'border-accentIndigo text-accentIndigo bg-white' 
+                  ? isQuiz ? 'border-[#FF5733] text-[#FF5733] bg-white font-extrabold' : 'border-accentIndigo text-accentIndigo bg-white'
                   : 'border-transparent text-textMuted hover:text-textMain'
               }`}
             >
@@ -1163,7 +1192,9 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
                   {/* Message bubble */}
                   <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-sm ${
                     isUser 
-                      ? 'bg-accentIndigo text-white rounded-tr-none' 
+                      ? isQuiz
+                        ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white rounded-tr-none shadow-orange-500/10'
+                        : 'bg-accentIndigo text-white rounded-tr-none' 
                       : 'bg-white text-textMain border border-[#E2E8F0] rounded-tl-none'
                   }`}>
                     {/* Render plain text response */}
@@ -1239,7 +1270,7 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
                             <>
                               <div className="flex items-start gap-1.5 text-[11px] font-bold text-amber-700">
                                 <Edit size={14} className="mt-0.5" />
-                                Đề xuất cập nhật/phân nhánh câu hỏi hiện tại
+                                Đề xuất cập nhật câu hỏi & đáp án AI
                               </div>
                               <div className="text-[10px] text-textMuted leading-tight bg-white p-2 rounded border border-slate-100 flex flex-col gap-2 max-h-48 overflow-y-auto">
                                 {Array.isArray(args.updates) && args.updates.map((item: any, itemIdx: number) => (
@@ -1247,6 +1278,8 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
                                     <div><span className="font-bold">{itemIdx + 1}. Sửa câu:</span> {getQuestionNumberStr(item.question_id)}</div>
                                     {item.text && <div><span className="font-bold">Đổi nội dung:</span> {item.text}</div>}
                                     {item.type && <div><span className="font-bold">Đổi loại:</span> {item.type?.toUpperCase()}</div>}
+                                    {item.correct_answer && <div><span className="font-bold text-emerald-700">Đáp án AI chọn:</span> {item.correct_answer}</div>}
+                                    {item.explanation && <div><span className="font-bold text-orange-700">Giải thích:</span> {item.explanation}</div>}
                                     {item.condition_question_id && (
                                       <div><span className="font-bold">Nhánh:</span> Chỉ hiện khi {getQuestionNumberStr(item.condition_question_id)} chọn "{item.condition_value}"</div>
                                     )}
@@ -1287,10 +1320,14 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
                               <>
                                 <button
                                   onClick={() => handleConfirmAction(m.id, tc.id, tc.function.name, args)}
-                                  className="bg-accentIndigo text-white hover:bg-indigo-700 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm"
+                                  className={`text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm ${
+                                    isQuiz
+                                      ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 shadow-orange-500/20'
+                                      : 'bg-accentIndigo hover:bg-indigo-700'
+                                  }`}
                                 >
                                   <Check size={10} />
-                                  Chấp nhận
+                                  Chấp nhận & Áp dụng
                                 </button>
                                 <button
                                   onClick={() => handleRejectAction(m.id, tc.id)}
@@ -1300,8 +1337,12 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
                                 </button>
                               </>
                             ) : status === 'accepted' ? (
-                              <span className="text-[9px] font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded flex items-center gap-1">
-                                ✓ Đã áp dụng hành động
+                              <span className={`text-[9px] font-bold px-2.5 py-1 rounded flex items-center gap-1 border ${
+                                isQuiz
+                                  ? 'text-[#FF5733] bg-orange-50 border-orange-200'
+                                  : 'text-green-600 bg-green-50 border-green-200'
+                              }`}>
+                                ✓ Đã áp dụng đáp án & gợi ý vào form
                               </span>
                             ) : (
                               <span className="text-[9px] font-bold text-textMuted bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
@@ -1322,8 +1363,8 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
               <div className="flex flex-col items-start animate-pulse">
                 <span className="text-[9px] font-bold text-textMuted uppercase mb-1 px-1">🤖 Trợ lý AI</span>
                 <div className="bg-white border border-[#E2E8F0] text-textMuted rounded-2xl rounded-tl-none p-3 text-xs flex items-center gap-2 shadow-sm">
-                  <Loader2 size={12} className="animate-spin text-accentIndigo" />
-                  {progressText || 'Đang phân tích và xử lý câu hỏi...'}
+                  <Loader2 size={12} className={`animate-spin ${isQuiz ? 'text-[#FF5733]' : 'text-accentIndigo'}`} />
+                  {progressText || 'Đang suy luận đáp án chuẩn và phân tích câu hỏi...'}
                 </div>
               </div>
             )}
@@ -1341,13 +1382,23 @@ Tôi đã thiết lập đề xuất xóa các câu cũ và chèn lại toàn b�
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={isSending}
-              className="flex-1 border border-[#E2E8F0] focus:border-accentIndigo rounded-xl p-2 px-3 text-xs outline-none bg-transparent"
-              placeholder={isGlobalMode ? "Hỏi cách sửa hoặc thêm câu hỏi..." : "Đổi dạng câu hỏi này? Câu này nên thế nào?..."}
+              className={`flex-1 border rounded-xl p-2 px-3 text-xs outline-none bg-transparent transition-colors ${
+                isQuiz ? 'border-[#FFE0D1] focus:border-[#FF5733]' : 'border-[#E2E8F0] focus:border-accentIndigo'
+              }`}
+              placeholder={
+                isGlobalMode 
+                  ? (isQuiz ? "Nhập yêu cầu: 'Giải bài tập', 'Chọn đáp án đúng cho các câu 1-15'..." : "Hỏi cách sửa hoặc thêm câu hỏi...") 
+                  : "Đổi dạng câu hỏi này? Đổi đáp án đúng?..."
+              }
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isSending}
-              className="w-8 h-8 rounded-xl bg-accentIndigo text-white flex items-center justify-center hover:bg-indigo-700 transition disabled:opacity-40"
+              className={`w-8 h-8 rounded-xl text-white flex items-center justify-center transition disabled:opacity-40 ${
+                isQuiz
+                  ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] shadow-md shadow-orange-500/20'
+                  : 'bg-accentIndigo hover:bg-indigo-700'
+              }`}
             >
               <Send size={14} />
             </button>

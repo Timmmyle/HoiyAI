@@ -55,13 +55,17 @@ BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON SAU (CÁC GIÁ TRỊ TRONG NGOẶC V
       "suggested_type": "[Loại mới: radio / checkbox / text / voice / scale / dropdown / date / file]",
       "reason": "[Lý do đổi]"
       
-      // Cho lệnh update_questions (dùng khi sửa đổi/phân nhánh trực tiếp câu có sẵn):
+      // Cho lệnh update_questions hoặc set_correct_answers (sửa câu hỏi hoặc ĐIỀN ĐÁP ÁN ĐÚNG/GIẢI THÍCH):
       "updates": [
         {
-          "question_id": "[ID câu cần sửa, ví dụ: q41]",
+          "question_id": "[ID câu cần sửa, ví dụ: q1]",
           "text": "[Nội dung mới nếu muốn sửa, không thì bỏ qua]",
           "type": "[Loại mới nếu muốn sửa, không thì bỏ qua]",
           "options": ["[Mảng đáp án mới nếu muốn sửa, không thì bỏ qua]"],
+          "correct_answer": "[Chuỗi đáp án đúng chuẩn nhất, ví dụ: 'Hà Nội' hoặc 'Đúng']",
+          "explanation": "[Lời giải thích tại sao đáp án này đúng cho người học]",
+          "difficulty": "[easy / medium / hard]",
+          "topic": "[Chủ đề kiến thức]",
           "is_branching_question": [true_hoặc_false nếu muốn sửa],
           "condition_question_id": "[ID câu điều kiện, ví dụ: q1]",
           "condition_value": "[Giá trị đáp án câu trước kích hoạt câu này]"
