@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   BarChart3, Loader2, ArrowLeft, RefreshCw, Sparkles, Download,
-  MessageSquare, Users, Percent, Clock, ChevronRight, Play, Send, Bot, User
+  MessageSquare, Users, Percent, Clock, ChevronRight, Play, Send, Bot, User, FileText, Printer
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -49,6 +49,11 @@ export default function AnalyticsPage() {
   const [analyzingQuestionId, setAnalyzingQuestionId] = useState<string | null>(null);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<{ [qId: string]: any }>({});
 
+  // Executive report states
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [executiveReportModal, setExecutiveReportModal] = useState(false);
+  const [executiveReportData, setExecutiveReportData] = useState<any>(null);
+
   // Chatbot states
   const [messages, setMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -92,6 +97,89 @@ export default function AnalyticsPage() {
       .map(([ip, count]) => ({ ip, count, percent: Math.round((count / total) * 100) }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
+  };
+
+  // AI One-Click Executive Research Report Generator
+  const handleGenerateExecutiveReport = async () => {
+    if (responses.length === 0) {
+      toast("Chưa có lượt phản hồi nào để tạo báo cáo.", "error");
+      return;
+    }
+
+    setIsGeneratingReport(true);
+    toast("AI đang tổng hợp và khởi tạo Báo cáo Nghiên cứu Executive...", "info");
+
+    try {
+      const summaryData = questions.map((q) => {
+        const qAnswers = answers.filter(a => a.question_id === q.id);
+        if (['radio', 'checkbox', 'dropdown'].includes(q.type)) {
+          const stats: { [opt: string]: { count: number; percent: number } } = {};
+          q.options.forEach(opt => { stats[opt] = { count: 0, percent: 0 }; });
+          
+          let totalCount = 0;
+          qAnswers.forEach(ans => {
+            let valArr: string[] = [];
+            if (ans.value.startsWith('[') && ans.value.endsWith(']')) {
+              try { valArr = JSON.parse(ans.value); } catch { valArr = [ans.value]; }
+            } else {
+              valArr = [ans.value];
+            }
+            valArr.forEach(v => {
+              if (stats[v]) {
+                stats[v].count++;
+                totalCount++;
+              }
+            });
+          });
+
+          Object.keys(stats).forEach(opt => {
+            stats[opt].percent = totalCount > 0 ? Math.round((stats[opt].count / totalCount) * 100) : 0;
+          });
+
+          return { type: 'choice', text: q.text, stats };
+        } else if (q.type === 'scale') {
+          let sum = 0;
+          const dist: { [rating: string]: number } = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+          qAnswers.forEach(ans => {
+            const val = parseInt(ans.value, 10);
+            if (!isNaN(val) && val >= 1 && val <= 5) {
+              sum += val;
+              dist[val.toString()] = (dist[val.toString()] || 0) + 1;
+            }
+          });
+          const avg = qAnswers.length > 0 ? (sum / qAnswers.length).toFixed(1) : '0.0';
+          return { type: 'scale', text: q.text, average: avg, distribution: dist };
+        } else {
+          return { type: 'text', text: q.text, answers: qAnswers.map(a => a.value).filter(Boolean) };
+        }
+      });
+
+      const res = await fetch('/api/ai/analyze/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formTitle, summaryData })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.summary) {
+        throw new Error(data.error || 'Lỗi khởi tạo báo cáo.');
+      }
+
+      setExecutiveReportData({
+        title: formTitle,
+        totalResponses: responses.length,
+        summaryMarkdown: data.summary,
+        deviceStats: getDeviceStats(),
+        ipStats: getIpStats(),
+        generatedAt: new Date().toLocaleString('vi-VN')
+      });
+      setExecutiveReportModal(true);
+      toast("Đã khởi tạo thành công Báo cáo Nghiên cứu Executive!", "success");
+    } catch (err: any) {
+      toast(`Lỗi tạo báo cáo: ${err.message}`, "error");
+    } finally {
+      setIsGeneratingReport(false);
+    }
   };
 
   // Load database content
@@ -445,6 +533,21 @@ export default function AnalyticsPage() {
           >
             <RefreshCw size={14} />
             Làm mới
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGenerateExecutiveReport}
+            disabled={isGeneratingReport || responses.length === 0}
+            className="flex items-center gap-1.5 border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-accentIndigo transition px-3.5 py-1.5 rounded text-xs font-bold shadow-sm disabled:opacity-50"
+            title="Khởi tạo bản báo cáo nghiên cứu tổng hợp AI (Chuẩn PDF Executive)"
+          >
+            {isGeneratingReport ? (
+              <Loader2 size={14} className="animate-spin text-accentIndigo" />
+            ) : (
+              <FileText size={14} className="text-accentIndigo" />
+            )}
+            Báo cáo AI Executive
           </button>
 
           <button
@@ -898,6 +1001,86 @@ export default function AnalyticsPage() {
             </button>
           </form>
         </div>
+
+      {/* Executive AI Report Printable PDF Modal */}
+      {executiveReportModal && executiveReportData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in print:p-0 print:bg-white print:static">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto print:max-h-none print:shadow-none print:border-none print:w-full print:p-0">
+            
+            {/* Modal Actions (Hidden when printing) */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 print:hidden">
+              <div className="flex items-center gap-2">
+                <FileText className="text-accentIndigo" size={20} />
+                <h2 className="font-extrabold text-base text-textMain">Báo Cáo Nghiên Cứu Executive AI</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 bg-accentIndigo hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm"
+                >
+                  <Printer size={14} />
+                  Xuất Báo Cáo PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExecutiveReportModal(false)}
+                  className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg transition"
+                >
+                  ✖
+                </button>
+              </div>
+            </div>
+
+            {/* Print Header */}
+            <div className="mb-6 border-b border-slate-200 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-accentIndigo uppercase tracking-wider block">Hoiy AI Executive Report</span>
+                  <h1 className="text-2xl font-black text-slate-900 mt-1">{executiveReportData.title}</h1>
+                </div>
+                <div className="text-right text-[11px] text-slate-500">
+                  <p>Số phản hồi: <strong className="text-slate-800">{executiveReportData.totalResponses} người</strong></p>
+                  <p>Thời gian lập: {executiveReportData.generatedAt}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Markdown Summary Content */}
+            <div className="prose prose-slate max-w-none text-xs leading-relaxed text-slate-800 space-y-4 mb-8">
+              {renderMessageContent(executiveReportData.summaryMarkdown)}
+            </div>
+
+            {/* Audience Devices & IPs Summary Table */}
+            <div className="border-t border-slate-200 pt-6 mt-8">
+              <h3 className="font-bold text-sm text-slate-900 mb-4">Thống kê Thiết bị & Nguồn Phản hồi</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl">
+                  <h4 className="font-bold text-slate-700 mb-2">Phân bố Thiết bị:</h4>
+                  <p>• Máy tính để bàn: <strong>{executiveReportData.deviceStats.desktop.count} ({executiveReportData.deviceStats.desktop.percent}%)</strong></p>
+                  <p>• Điện thoại di động: <strong>{executiveReportData.deviceStats.mobile.count} ({executiveReportData.deviceStats.mobile.percent}%)</strong></p>
+                  <p>• Máy tính bảng: <strong>{executiveReportData.deviceStats.tablet.count} ({executiveReportData.deviceStats.tablet.percent}%)</strong></p>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl">
+                  <h4 className="font-bold text-slate-700 mb-2">Top Nguồn IP Phản hồi:</h4>
+                  <ul className="space-y-1">
+                    {executiveReportData.ipStats.map((item: any, idx: number) => (
+                      <li key={idx}>• IP {item.ip}: <strong>{item.count} lượt ({item.percent}%)</strong></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Print Footer */}
+            <div className="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-100 pt-4">
+              Báo cáo được tổng hợp tự động bởi Hoiy AI Platform — www.hoiy.ai
+            </div>
+
+          </div>
+        </div>
+      )}
 
       </div>
     </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Plus, Trash2, Eye, Share2, Save, BarChart3, Settings, MoveUp, MoveDown, 
-  HelpCircle, Copy, CheckSquare, ListPlus, ToggleLeft, ArrowLeft, Loader2, AlertTriangle, Monitor, Mail, Sparkles, CheckCircle2, Video, MessageSquare
+  HelpCircle, Copy, CheckSquare, ListPlus, ToggleLeft, ArrowLeft, Loader2, AlertTriangle, Monitor, Mail, Sparkles, CheckCircle2, Video, MessageSquare, ShieldCheck
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -74,6 +74,9 @@ export default function BuilderPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isQuiz, setIsQuiz] = useState(false);
   const [isAnalyzingQuiz, setIsAnalyzingQuiz] = useState(false);
+  const [auditResult, setAuditResult] = useState<any>(null);
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
 
   // Monitor screen size for device redirection
   useEffect(() => {
@@ -324,6 +327,41 @@ export default function BuilderPage() {
     }
   };
 
+  // AI Pre-Flight Survey Quality Audit
+  const handleSurveyAudit = async () => {
+    if (questions.length === 0) {
+      toast("Chưa có câu hỏi nào để kiểm định.", "error");
+      return;
+    }
+
+    setIsAuditing(true);
+    toast("AI đang kiểm định chất lượng bảng hỏi và tính hợp lý của câu hỏi...", "info");
+    try {
+      const res = await fetch('/api/ai/survey-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          questions
+        })
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result.data) {
+        throw new Error(result.error || 'Lỗi kiểm định.');
+      }
+
+      setAuditResult(result.data);
+      setShowAuditModal(true);
+      toast("Đã hoàn tất kiểm định chất lượng khảo sát!", "success");
+    } catch (err: any) {
+      toast(`Lỗi kiểm định: ${err.message}`, "error");
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
   // Share form link
   const handleShareForm = () => {
     const publicUrl = `${window.location.origin}/f/${formId}`;
@@ -427,6 +465,21 @@ export default function BuilderPage() {
           >
             <BarChart3 size={14} />
             Kết quả
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSurveyAudit}
+            disabled={isAuditing || questions.length === 0}
+            className="flex items-center gap-1.5 border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/60 text-accentIndigo transition px-3 py-1.5 rounded text-xs font-bold shadow-sm disabled:opacity-50"
+            title="AI Kiểm định chất lượng bảng hỏi & độ tin cậy"
+          >
+            {isAuditing ? (
+              <Loader2 size={14} className="animate-spin text-accentIndigo" />
+            ) : (
+              <ShieldCheck size={14} className="text-accentIndigo" />
+            )}
+            Kiểm định AI
           </button>
 
           <button
@@ -1065,6 +1118,106 @@ export default function BuilderPage() {
       </div>
         </main>
       </div>
+
+      {/* AI Survey Quality Audit Result Modal */}
+      {showAuditModal && auditResult && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button
+              onClick={() => setShowAuditModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition"
+            >
+              <Plus className="rotate-45" size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-accentIndigo flex items-center justify-center">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-textMain">Kết quả Kiểm định Khảo sát AI</h3>
+                <p className="text-[11px] text-textMuted">Đánh giá tính hợp lý, thời gian điền & phát hiện định hướng</p>
+              </div>
+            </div>
+
+            {/* Score Banner */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/60 p-4 rounded-2xl flex items-center justify-between mb-5">
+              <div>
+                <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Điểm Chất lượng</span>
+                <span className="text-2xl font-black text-accentIndigo">{auditResult.score}/100</span>
+                <span className="ml-2 text-xs font-bold text-indigo-700">({auditResult.grade})</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Ước tính thời gian điền</span>
+                <span className="text-xs font-extrabold text-textMain">{auditResult.estimatedTime || '3-5 phút'}</span>
+              </div>
+            </div>
+
+            {/* Strengths */}
+            {auditResult.strengths && auditResult.strengths.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <CheckCircle2 size={14} /> Điểm mạnh của Bảng hỏi
+                </h4>
+                <ul className="flex flex-col gap-1.5 text-xs text-textMain bg-emerald-50/40 p-3 rounded-xl border border-emerald-100/60">
+                  {auditResult.strengths.map((str: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-emerald-500 font-bold">•</span>
+                      <span>{str}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Issues */}
+            {auditResult.issues && auditResult.issues.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <AlertTriangle size={14} /> Vấn đề phát hiện cần lưu ý
+                </h4>
+                <div className="flex flex-col gap-2">
+                  {auditResult.issues.map((issue: any, idx: number) => (
+                    <div key={idx} className="bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl text-xs text-textMain flex items-start gap-2">
+                      <span className="text-amber-600 font-bold">⚠️</span>
+                      <div>
+                        {issue.questionId && (
+                          <span className="font-bold text-amber-900 block mb-0.5">Vấn đề tại [{issue.questionId}]:</span>
+                        )}
+                        <span>{issue.message}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {auditResult.recommendations && auditResult.recommendations.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Sparkles size={14} /> Khuyên khuyên tối ưu từ AI
+                </h4>
+                <ul className="flex flex-col gap-1.5 text-xs text-textMain bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/60">
+                  {auditResult.recommendations.map((rec: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-indigo-500 font-bold">💡</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowAuditModal(false)}
+              className="w-full bg-accentIndigo hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm"
+            >
+              Đã hiểu & Hoàn tất
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* AI Assistant Chatbox Widget */}
       <AiChatbox
