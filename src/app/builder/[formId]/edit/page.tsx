@@ -1115,8 +1115,14 @@ export default function BuilderPage() {
 
                   {/* Settings Accordion - Display settings locally inside the card when selected */}
                   {selectedQuestionId === q.id && (
-                    <div className="border-t border-[#F1F5F9] mt-5 pt-4 flex flex-col gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-100 animate-slide-in">
-                      <div className="font-bold text-textMuted uppercase text-[9px] tracking-wider">
+                    <div className={`border-t mt-5 pt-4 flex flex-col gap-4 text-xs p-4 rounded-xl border animate-slide-in transition-colors ${
+                      isQuiz
+                        ? 'bg-[#FFF9F2] border-[#FFE0D1]'
+                        : 'bg-slate-50 border-slate-100'
+                    }`}>
+                      <div className={`font-extrabold uppercase text-[9px] tracking-wider ${
+                        isQuiz ? 'text-[#FF5733]' : 'text-textMuted'
+                      }`}>
                         Cấu hình Câu hỏi
                       </div>
                       
@@ -1128,9 +1134,11 @@ export default function BuilderPage() {
                             id={`req-${q.id}`}
                             checked={q.is_required}
                             onChange={(e) => updateQuestion(q.id, { is_required: e.target.checked })}
-                            className="w-4 h-4 text-accentIndigo outline-none border-[#E2E8F0] rounded cursor-pointer"
+                            className={`w-4 h-4 outline-none rounded cursor-pointer ${
+                              isQuiz ? 'accent-[#FF5733] text-[#FF5733]' : 'text-accentIndigo border-[#E2E8F0]'
+                            }`}
                           />
-                          <label htmlFor={`req-${q.id}`} className="font-semibold text-textMain cursor-pointer select-none">
+                          <label htmlFor={`req-${q.id}`} className="font-semibold text-slate-800 cursor-pointer select-none">
                             Bắt buộc trả lời
                           </label>
                         </div>
@@ -1143,9 +1151,11 @@ export default function BuilderPage() {
                               id={`branch-${q.id}`}
                               checked={q.is_branching_question}
                               onChange={(e) => updateQuestion(q.id, { is_branching_question: e.target.checked })}
-                              className="w-4 h-4 text-accentIndigo outline-none border-[#E2E8F0] rounded cursor-pointer"
+                              className={`w-4 h-4 outline-none rounded cursor-pointer ${
+                                isQuiz ? 'accent-[#FF5733] text-[#FF5733]' : 'text-accentIndigo border-[#E2E8F0]'
+                              }`}
                             />
-                            <label htmlFor={`branch-${q.id}`} className="font-semibold text-textMain cursor-pointer select-none">
+                            <label htmlFor={`branch-${q.id}`} className="font-semibold text-slate-800 cursor-pointer select-none">
                               Dùng để phân nhánh
                             </label>
                           </div>
@@ -1465,11 +1475,11 @@ export default function BuilderPage() {
             </button>
 
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 text-[#FF5733] flex items-center justify-center">
                 <Settings size={20} />
               </div>
               <div>
-                <h3 className="font-extrabold text-base text-textMain">Cài Đặt Bài Tập (Learning Settings)</h3>
+                <h3 className="font-extrabold text-base text-slate-900">Cài Đặt Bài Tập (Learning Settings)</h3>
                 <p className="text-[11px] text-textMuted">Cấu hình gameplay, thứ tự câu hỏi, timer, cách chấm điểm & chế độ học tập</p>
               </div>
             </div>
@@ -1488,7 +1498,7 @@ export default function BuilderPage() {
                   onClick={() => setLearningSettingsTab(tab.id as any)}
                   className={`pb-2.5 px-3 text-xs font-bold transition border-b-2 ${
                     learningSettingsTab === tab.id
-                      ? 'border-accentIndigo text-accentIndigo'
+                      ? 'border-[#FF5733] text-[#FF5733]'
                       : 'border-transparent text-textMuted hover:text-textMain'
                   }`}
                 >
@@ -1500,40 +1510,40 @@ export default function BuilderPage() {
             {/* TAB 1: General & Order */}
             {learningSettingsTab === 'general' && (
               <div className="space-y-4 text-xs">
-                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
-                  <h4 className="font-bold text-textMain">Xáo trộn thứ tự (Shuffle)</h4>
+                <div className="bg-[#FFF9F2]/60 border border-[#FFE4D6] p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-slate-900">Xáo trộn thứ tự (Shuffle)</h4>
                   
                   <label className="flex items-center justify-between cursor-pointer select-none">
                     <div>
-                      <span className="font-semibold text-textMain block">Xáo trộn vị trí các câu hỏi (Shuffle questions)</span>
+                      <span className="font-semibold text-slate-800 block">Xáo trộn vị trí các câu hỏi (Shuffle questions)</span>
                       <span className="text-[10px] text-textMuted">Mỗi lần làm bài, các câu hỏi sẽ xuất hiện ở vị trí ngẫu nhiên</span>
                     </div>
                     <input
                       type="checkbox"
                       checked={!!learningSettings.shuffle_questions}
                       onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, shuffle_questions: e.target.checked }))}
-                      className="w-4 h-4 rounded text-accentIndigo focus:ring-accentIndigo"
+                      className="w-4 h-4 rounded accent-[#FF5733] text-[#FF5733]"
                     />
                   </label>
 
-                  <div className="border-t border-slate-200/60 pt-3">
+                  <div className="border-t border-[#FFE0D1] pt-3">
                     <label className="flex items-center justify-between cursor-pointer select-none">
                       <div>
-                        <span className="font-semibold text-textMain block">Xáo trộn các tùy chọn đáp án (Shuffle answer choices)</span>
+                        <span className="font-semibold text-slate-800 block">Xáo trộn các tùy chọn đáp án (Shuffle answer choices)</span>
                         <span className="text-[10px] text-textMuted">Thứ tự các phương án A, B, C, D sẽ được đổi chỗ ngẫu nhiên</span>
                       </div>
                       <input
                         type="checkbox"
                         checked={!!learningSettings.shuffle_answers}
                         onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, shuffle_answers: e.target.checked }))}
-                        className="w-4 h-4 rounded text-accentIndigo focus:ring-accentIndigo"
+                        className="w-4 h-4 rounded accent-[#FF5733] text-[#FF5733]"
                       />
                     </label>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
-                  <h4 className="font-bold text-textMain">Giới hạn số lần làm bài (Attempts)</h4>
+                <div className="bg-[#FFF9F2]/60 border border-[#FFE4D6] p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-slate-900">Giới hạn số lần làm bài (Attempts)</h4>
                   <div className="flex items-center gap-4">
                     {[
                       { val: 0, label: 'Không giới hạn' },
@@ -1544,10 +1554,10 @@ export default function BuilderPage() {
                         key={item.val}
                         type="button"
                         onClick={() => setLearningSettings((prev: any) => ({ ...prev, attempts_limit: item.val }))}
-                        className={`px-3 py-1.5 rounded-xl font-bold border text-xs transition ${
+                        className={`px-4 py-2 rounded-xl font-bold border text-xs transition ${
                           learningSettings.attempts_limit === item.val
-                            ? 'bg-accentIndigo text-white border-accentIndigo shadow-sm'
-                            : 'bg-white border-slate-200 text-textMuted hover:text-textMain'
+                            ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white border-transparent shadow-md shadow-orange-500/20'
+                            : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
                         }`}
                       >
                         {item.label}
@@ -1556,32 +1566,32 @@ export default function BuilderPage() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
-                  <h4 className="font-bold text-textMain">Chế độ làm lại (Retake Mode)</h4>
+                <div className="bg-[#FFF9F2]/60 border border-[#FFE4D6] p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-slate-900">Chế độ làm lại (Retake Mode)</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setLearningSettings((prev: any) => ({ ...prev, retake_mode: 'entire' }))}
-                      className={`p-3 rounded-xl border text-left transition ${
+                      className={`p-3.5 rounded-xl border text-left transition ${
                         learningSettings.retake_mode === 'entire'
-                          ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
-                          : 'bg-white border-slate-200 text-textMuted'
+                          ? 'bg-[#FFF0E6] border-[#FFD8C7] text-[#FF5733] font-bold shadow-sm'
+                          : 'bg-white border-slate-200 text-slate-600'
                       }`}
                     >
-                      <span className="block text-xs">Làm lại toàn bộ bài</span>
+                      <span className="block text-xs font-bold">Làm lại toàn bộ bài</span>
                       <span className="text-[10px] font-normal text-textMuted">Tất cả các câu hỏi sẽ được làm lại từ đầu</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setLearningSettings((prev: any) => ({ ...prev, retake_mode: 'incorrect_only' }))}
-                      className={`p-3 rounded-xl border text-left transition ${
+                      className={`p-3.5 rounded-xl border text-left transition ${
                         learningSettings.retake_mode === 'incorrect_only'
-                          ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
-                          : 'bg-white border-slate-200 text-textMuted'
+                          ? 'bg-[#FFF0E6] border-[#FFD8C7] text-[#FF5733] font-bold shadow-sm'
+                          : 'bg-white border-slate-200 text-slate-600'
                       }`}
                     >
-                      <span className="block text-xs">Chỉ làm lại câu sai</span>
+                      <span className="block text-xs font-bold">Chỉ làm lại câu sai</span>
                       <span className="text-[10px] font-normal text-textMuted">Chỉ giữ lại các câu trả lời sai để ôn luyện</span>
                     </button>
                   </div>
@@ -1620,7 +1630,7 @@ export default function BuilderPage() {
                     onClick={() => setLearningSettings((prev: any) => ({ ...prev, learning_mode: mode.id }))}
                     className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
                       learningSettings.learning_mode === mode.id
-                        ? 'bg-indigo-50/70 border-accentIndigo shadow-sm'
+                        ? 'bg-[#FFF0E6] border-[#FF5733] shadow-sm'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -1629,12 +1639,12 @@ export default function BuilderPage() {
                       name="learning_mode"
                       checked={learningSettings.learning_mode === mode.id}
                       onChange={() => {}}
-                      className="mt-1 text-accentIndigo focus:ring-accentIndigo"
+                      className="mt-1 accent-[#FF5733]"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-textMain">{mode.name}</h4>
-                        <span className="text-[9px] font-extrabold uppercase bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                        <h4 className="font-bold text-slate-900">{mode.name}</h4>
+                        <span className="text-[9px] font-extrabold uppercase bg-orange-100 text-[#FF5733] px-2 py-0.5 rounded-full">
                           {mode.badge}
                         </span>
                       </div>
@@ -1648,8 +1658,8 @@ export default function BuilderPage() {
             {/* TAB 3: Timer & Scoring */}
             {learningSettingsTab === 'scoring' && (
               <div className="space-y-4 text-xs">
-                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
-                  <h4 className="font-bold text-textMain">Thời gian làm bài (Timer)</h4>
+                <div className="bg-[#FFF9F2]/60 border border-[#FFE4D6] p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-slate-900">Thời gian làm bài (Timer)</h4>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { id: 'none', label: 'Không giới hạn' },
@@ -1662,8 +1672,8 @@ export default function BuilderPage() {
                         onClick={() => setLearningSettings((prev: any) => ({ ...prev, timer_type: t.id }))}
                         className={`p-2.5 rounded-xl border text-xs font-bold transition ${
                           learningSettings.timer_type === t.id
-                            ? 'bg-accentIndigo text-white border-accentIndigo shadow-sm'
-                            : 'bg-white border-slate-200 text-textMuted'
+                            ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white border-transparent shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600'
                         }`}
                       >
                         {t.label}
@@ -1673,48 +1683,48 @@ export default function BuilderPage() {
 
                   {learningSettings.timer_type !== 'none' && (
                     <div className="flex items-center gap-3 pt-2">
-                      <span className="font-semibold text-textMain">
+                      <span className="font-semibold text-slate-800">
                         Thời gian {learningSettings.timer_type === 'per_question' ? '(giây / câu)' : '(phút / toàn bài)'}:
                       </span>
                       <input
                         type="number"
                         value={learningSettings.timer_value || 30}
                         onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, timer_value: parseInt(e.target.value, 10) || 0 }))}
-                        className="w-24 border border-slate-300 rounded-xl px-3 py-1.5 font-bold outline-none text-center bg-white"
+                        className="w-24 border border-slate-300 focus:border-[#FF5733] rounded-xl px-3 py-1.5 font-bold outline-none text-center bg-white"
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl space-y-3">
-                  <h4 className="font-bold text-textMain">Điểm số & Thưởng (Points & Bonuses)</h4>
+                <div className="bg-[#FFF9F2]/60 border border-[#FFE4D6] p-4 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-slate-900">Điểm số & Thưởng (Points & Bonuses)</h4>
                   <div className="flex items-center gap-4 mb-3">
-                    <span className="font-semibold text-textMain">Điểm mỗi câu mặc định:</span>
+                    <span className="font-semibold text-slate-800">Điểm mỗi câu mặc định:</span>
                     <input
                       type="number"
                       value={learningSettings.points_per_question || 10}
                       onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, points_per_question: parseInt(e.target.value, 10) || 10 }))}
-                      className="w-20 border border-slate-300 rounded-xl px-3 py-1 font-bold outline-none text-center bg-white"
+                      className="w-20 border border-slate-300 focus:border-[#FF5733] rounded-xl px-3 py-1 font-bold outline-none text-center bg-white"
                     />
                   </div>
 
-                  <div className="space-y-2 border-t border-slate-200/60 pt-3">
+                  <div className="space-y-2 border-t border-[#FFE0D1] pt-3">
                     <label className="flex items-center justify-between cursor-pointer select-none">
-                      <span className="text-textMain">Điểm thưởng trả lời đúng liên tiếp (Streak Bonus)</span>
+                      <span className="text-slate-800">Điểm thưởng trả lời đúng liên tiếp (Streak Bonus)</span>
                       <input
                         type="checkbox"
                         checked={!!learningSettings.streak_bonus}
                         onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, streak_bonus: e.target.checked }))}
-                        className="w-4 h-4 rounded text-accentIndigo"
+                        className="w-4 h-4 rounded accent-[#FF5733] text-[#FF5733]"
                       />
                     </label>
                     <label className="flex items-center justify-between cursor-pointer select-none">
-                      <span className="text-textMain">Điểm phạt khi trả lời sai (Negative Marking)</span>
+                      <span className="text-slate-800">Điểm phạt khi trả lời sai (Negative Marking)</span>
                       <input
                         type="checkbox"
                         checked={!!learningSettings.negative_marking}
                         onChange={(e) => setLearningSettings((prev: any) => ({ ...prev, negative_marking: e.target.checked }))}
-                        className="w-4 h-4 rounded text-accentIndigo"
+                        className="w-4 h-4 rounded accent-[#FF5733] text-[#FF5733]"
                       />
                     </label>
                   </div>
@@ -1725,11 +1735,11 @@ export default function BuilderPage() {
             {/* TAB 4: AI & Bank */}
             {learningSettingsTab === 'ai' && (
               <div className="space-y-4 text-xs">
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 p-5 rounded-2xl text-center space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white text-accentIndigo flex items-center justify-center mx-auto shadow-sm">
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 p-5 rounded-2xl text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white text-[#FF5733] flex items-center justify-center mx-auto shadow-sm">
                     <Sparkles size={24} />
                   </div>
-                  <h4 className="font-extrabold text-sm text-textMain">Sinh thêm câu hỏi tự động với AI</h4>
+                  <h4 className="font-extrabold text-sm text-slate-900">Sinh thêm câu hỏi tự động với AI</h4>
                   <p className="text-[11px] text-textMuted max-w-md mx-auto leading-relaxed">
                     AI sẽ dựa trên tài liệu gốc hoặc các câu hỏi hiện tại để sinh thêm các câu hỏi trắc nghiệm mới, tránh trùng lặp và phân loại độ khó tự động.
                   </p>
@@ -1739,7 +1749,7 @@ export default function BuilderPage() {
                       setShowLearningSettingsModal(false);
                       toast("Tính năng sinh thêm câu hỏi AI nâng cao (Generate More Questions) sẽ có ở khung xem trước!", "info");
                     }}
-                    className="bg-accentIndigo hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-sm transition"
+                    className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-sm transition"
                   >
                     ✨ Mở Bảng Sinh Câu Hỏi AI
                   </button>
@@ -1756,7 +1766,7 @@ export default function BuilderPage() {
                   setShowLearningSettingsModal(false);
                   toast("Đã lưu các thiết lập Cài đặt Bài tập!", "success");
                 }}
-                className="bg-accentIndigo hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition shadow-sm"
+                className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition shadow-md shadow-orange-500/20"
               >
                 Hoàn tất Cài đặt
               </button>
