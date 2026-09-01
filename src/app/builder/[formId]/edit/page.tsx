@@ -76,6 +76,7 @@ export default function BuilderPage() {
   const [isAnalyzingQuiz, setIsAnalyzingQuiz] = useState(false);
   const [auditResult, setAuditResult] = useState<any>(null);
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isFixingWithAi, setIsFixingWithAi] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
 
   // Monitor screen size for device redirection
@@ -359,6 +360,38 @@ export default function BuilderPage() {
       toast(`Lỗi kiểm định: ${err.message}`, "error");
     } finally {
       setIsAuditing(false);
+    }
+  };
+
+  // AI Auto-fix survey questions based on audit findings
+  const handleFixWithAi = async () => {
+    setIsFixingWithAi(true);
+    toast("AI đang tiến hành sửa đổi và tối ưu hóa các câu hỏi...", "info");
+    try {
+      const res = await fetch('/api/ai/survey-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          questions,
+          mode: 'fix',
+          auditResult
+        })
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result.data || !Array.isArray(result.data.fixedQuestions)) {
+        throw new Error(result.error || 'AI không thể tự động sửa.');
+      }
+
+      setQuestions(result.data.fixedQuestions);
+      setShowAuditModal(false);
+      toast("Đã tự động sửa & tối ưu hóa toàn bộ câu hỏi theo gợi ý của AI!", "success");
+    } catch (err: any) {
+      toast(`Lỗi sửa theo AI: ${err.message}`, "error");
+    } finally {
+      setIsFixingWithAi(false);
     }
   };
 
@@ -1209,12 +1242,29 @@ export default function BuilderPage() {
               </div>
             )}
 
-            <button
-              onClick={() => setShowAuditModal(false)}
-              className="w-full bg-accentIndigo hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm"
-            >
-              Đã hiểu & Hoàn tất
-            </button>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleFixWithAi}
+                disabled={isFixingWithAi}
+                className="flex-1 bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-90 transition text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                {isFixingWithAi ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Sparkles size={15} />
+                )}
+                Sửa theo AI
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAuditModal(false)}
+                className="px-5 border border-slate-200 hover:bg-slate-50 text-textMuted hover:text-textMain font-semibold py-2.5 rounded-xl text-xs transition"
+              >
+                Đã hiểu & Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}
