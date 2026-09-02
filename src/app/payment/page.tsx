@@ -99,8 +99,8 @@ function PaymentContent() {
   }
 
   // Generate VietQR URL
-  const addInfo = encodeURIComponent(`HOIYAI_${session.user.id.slice(0,8)}_${tier}`);
-  const qrUrl = `https://img.vietqr.io/image/MB-123456789-compact.png?amount=${price}&addInfo=${addInfo}&accountName=HOIYAI%20PAYMENT`;
+  const addInfo = encodeURIComponent(`MUSTRING_${session.user.id.slice(0,8)}_${tier}`);
+  const qrUrl = `https://img.vietqr.io/image/MB-123456789-compact.png?amount=${price}&addInfo=${addInfo}&accountName=MUSTRING%20PAYMENT`;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -112,7 +112,7 @@ function PaymentContent() {
         >
           <ArrowLeft size={16} />
         </button>
-        <span className="font-bold text-base text-textMain">Thanh toán dịch vụ hoiyAi</span>
+        <span className="font-bold text-base text-textMain">Thanh toán dịch vụ Mustring.com</span>
       </header>
 
       {/* Main Content */}

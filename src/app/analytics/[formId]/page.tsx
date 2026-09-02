@@ -957,7 +957,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="text-left">
                 <h3 className="font-bold text-xs text-textMain flex items-center gap-1.5">
-                  Trợ lý Phân tích HoiyAI
+                  Trợ lý Phân tích mustring.com
                 </h3>
                 <p className="text-[9px] text-textMuted mt-0.5">Tự động tóm tắt & Khai phá Insight nổi bật</p>
               </div>
@@ -1060,7 +1060,7 @@ export default function AnalyticsPage() {
             <div className="mb-6 border-b border-slate-200 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-accentIndigo uppercase tracking-wider block">Hoiy AI Executive Report</span>
+                  <span className="text-[10px] font-bold text-accentIndigo uppercase tracking-wider block">mustring.com Executive Report</span>
                   <h1 className="text-2xl font-black text-slate-900 mt-1">{executiveReportData.title}</h1>
                 </div>
                 <div className="text-right text-[11px] text-slate-500">
@@ -1099,7 +1099,7 @@ export default function AnalyticsPage() {
 
             {/* Print Footer */}
             <div className="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-100 pt-4">
-              Báo cáo được tổng hợp tự động bởi Hoiy AI Platform — www.hoiy.ai
+              Báo cáo được tổng hợp tự động bởi mustring.com Platform — www.mustring.com
             </div>
 
           </div>

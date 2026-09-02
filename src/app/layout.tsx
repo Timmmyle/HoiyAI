@@ -10,8 +10,16 @@ const notoSansMono = Noto_Sans_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Website Survey AI',
-  description: 'Nền tảng khảo sát thông minh tích hợp AI - Thay thế Google Forms',
+  title: 'Mustring.com - Khảo sát & Bài tập Học tập Thông minh',
+  description: 'Nền tảng tạo khảo sát & bài tập trắc nghiệm học tập thông minh tích hợp AI',
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' }
+    ],
+    shortcut: '/logo.png',
+    apple: '/logo.png'
+  }
 };
 
 import { ToastProvider } from '@/context/ToastContext';

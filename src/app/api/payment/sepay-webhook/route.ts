@@ -29,10 +29,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Extract user ID prefix and target tier from memo content
-    // VietQR content format: HOIYAI_[idPrefix]_[TIER]
-    const match = content.match(/HOIYAI_([a-f0-9]{8})_(BASIC|PRO)/i);
+    // VietQR content format: MUSTRING_[idPrefix]_[TIER] (or HOIYAI_[idPrefix]_[TIER])
+    const match = content.match(/(?:MUSTRING|HOIYAI)_([a-f0-9]{8})_(BASIC|PRO)/i);
     if (!match) {
-      console.log(`[SePay Webhook] Memo content "${content}" does not match hoiyAi format. Skipping.`);
+      console.log(`[SePay Webhook] Memo content "${content}" does not match mustring.com format. Skipping.`);
       return NextResponse.json({ success: true, message: 'Nội dung chuyển khoản không khớp định dạng, bỏ qua.' });
     }
 
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({ 
     success: true, 
-    message: "hoiyAi SePay Webhook is online. Only POST requests containing transaction payloads will trigger account upgrades." 
+    message: "mustring.com SePay Webhook is online. Only POST requests containing transaction payloads will trigger account upgrades." 
   });
 }
 

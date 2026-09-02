@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Plus, Trash2, Eye, Share2, Save, BarChart3, Settings, MoveUp, MoveDown, 
-  HelpCircle, Copy, CheckSquare, ListPlus, ToggleLeft, ArrowLeft, Loader2, AlertTriangle, Monitor, Mail, Sparkles, CheckCircle2, Video, MessageSquare, ShieldCheck
+  HelpCircle, Copy, CheckSquare, ListPlus, ToggleLeft, ArrowLeft, Loader2, AlertTriangle, Monitor, Mail, Sparkles, CheckCircle2, Video, MessageSquare, ShieldCheck, QrCode, Download, ExternalLink
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -97,6 +97,7 @@ export default function BuilderPage() {
   const [isAuditing, setIsAuditing] = useState(false);
   const [isFixingWithAi, setIsFixingWithAi] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Monitor screen size for device redirection
   useEffect(() => {
@@ -167,7 +168,7 @@ export default function BuilderPage() {
 
   // Handle mobile share / email
   const handleEmailLink = () => {
-    const subject = encodeURIComponent("Link chỉnh sửa khảo sát hoiyAi");
+    const subject = encodeURIComponent("Link chỉnh sửa khảo sát mustring.com");
     const body = encodeURIComponent(`Xin chào,\n\nĐây là link chỉnh sửa khảo sát của bạn. Hãy mở trên Desktop/Laptop để chỉnh sửa:\n${window.location.href}\n\nTrân trọng!`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
@@ -421,11 +422,11 @@ export default function BuilderPage() {
     }
   };
 
-  // Share form link
+  // Share form link & QR modal
   const handleShareForm = () => {
     const publicUrl = `${window.location.origin}/f/${formId}`;
     navigator.clipboard.writeText(publicUrl);
-    toast(`Đã copy link gửi cho người khảo sát: ${publicUrl}`, 'success');
+    setShowShareModal(true);
   };
 
   // Preview form simulation
@@ -1819,6 +1820,93 @@ export default function BuilderPage() {
                 className="bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] hover:opacity-95 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs transition shadow-md shadow-orange-500/20"
               >
                 Hoàn tất Cài đặt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SHARE & QR CODE MODAL */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <QrCode size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900">Chia sẻ & Mã QR Khảo sát</h3>
+                  <p className="text-[10px] text-slate-500">Mã QR cho Slide trình chiếu & Standee sự kiện</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-slate-400 hover:text-slate-600 transition text-lg font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200/80 p-5 rounded-2xl mb-5">
+              <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-3">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/f/${formId}` : '')}`}
+                  alt="QR Code Khảo sát"
+                  className="w-48 h-48 object-contain rounded-lg"
+                />
+              </div>
+              <div className="text-center">
+                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Scan to Open Survey</span>
+                <span className="text-[11px] text-slate-600 font-semibold mt-0.5 block truncate max-w-[280px]">{title || 'Biểu mẫu khảo sát'}</span>
+              </div>
+            </div>
+
+            {/* Public Link Copy Bar */}
+            <div className="mb-5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Đường dẫn làm bài (Public URL):</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/f/${formId}` : ''}
+                  className="flex-1 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-mono text-slate-700 outline-none select-all"
+                />
+                <button
+                  onClick={() => {
+                    const publicUrl = `${window.location.origin}/f/${formId}`;
+                    navigator.clipboard.writeText(publicUrl);
+                    toast("Đã sao chép link khảo sát!", "success");
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition shadow-xs"
+                >
+                  <Copy size={14} />
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+              <a
+                href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/f/${formId}` : '')}`}
+                target="_blank"
+                download={`QR_Mustring_${formId}.png`}
+                className="flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 font-semibold transition"
+              >
+                <Download size={14} />
+                Tải QR sắc nét (HD)
+              </a>
+
+              <button
+                onClick={() => {
+                  window.open(`/f/${formId}`, '_blank');
+                }}
+                className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 font-bold transition"
+              >
+                <ExternalLink size={14} />
+                Mở làm thử
               </button>
             </div>
           </div>

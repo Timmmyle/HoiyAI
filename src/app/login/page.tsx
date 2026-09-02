@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-bold mb-3">
             <Sparkles size={12} />
-            Website Survey AI
+            Mustring.com
           </div>
           <h1 className="text-lg font-bold text-textMain">
             {isSignUp ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập'}

@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       return `Câu ${idx + 1} (${item.type.toUpperCase()}): "${item.text}"\n${statsText}`;
     }).join('\n\n');
 
-    const systemPrompt = `Bạn là Trợ lý AI phân tích kết quả nghiên cứu thị trường xuất sắc của hoiyAi.
+    const systemPrompt = `Bạn là Trợ lý AI phân tích kết quả nghiên cứu thị trường xuất sắc của mustring.com.
 Nhiệm vụ của bạn là hỗ trợ người dùng đọc hiểu, phân tích sâu, và đề xuất các giải pháp thực tế từ số liệu báo cáo của cuộc khảo sát "${formTitle}".
 
 DỮ LIỆU KẾT QUẢ KHẢO SÁT CHI TIẾT:

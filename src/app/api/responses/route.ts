@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
     const ipAddress = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
     // Verify submission count limits based on creator tier
-    // 1. Get form owner
+    // 1. Get form owner and learning_settings
     const { data: form, error: formError } = await supabaseAdmin
       .from('forms')
-      .select('user_id')
+      .select('user_id, learning_settings')
       .eq('id', formId)
       .single();
 
@@ -61,6 +61,14 @@ export async function POST(req: NextRequest) {
     }
 
     const currentCount = count || 0;
+    
+    // Check specific form quota limit set by creator
+    if (form.learning_settings?.max_responses && currentCount >= Number(form.learning_settings.max_responses)) {
+      return NextResponse.json({
+        error: `Biểu mẫu/Sự kiện này đã đạt giới hạn đăng ký tối đa (${form.learning_settings.max_responses} người). Ban tổ chức đã đóng nhận phản hồi.`
+      }, { status: 403 });
+    }
+
     const limit = ownerTier === 'FREE' ? 40 : ownerTier === 'BASIC' ? 100 : Infinity;
 
     if (currentCount >= limit) {

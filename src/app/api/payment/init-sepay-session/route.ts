@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
     const params: any = {
       merchant: process.env.SEPAY_MERCHANT_ID || '12345',
       operation: 'PURCHASE',
-      order_invoice_number: `HOIYAI_${userIdPrefix}_${tier}_${Date.now()}`,
+      order_invoice_number: `MUSTRING_${userIdPrefix}_${tier}_${Date.now()}`,
       order_amount: price,
       currency: 'VND',
-      order_description: `HOIYAI_${userIdPrefix}_${tier}`,
+      order_description: `MUSTRING_${userIdPrefix}_${tier}`,
       success_url: `${origin}/`,
       cancel_url: `${origin}/`
     };

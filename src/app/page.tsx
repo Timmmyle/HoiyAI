@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import {
   Sparkles, FileUp, ArrowRight, LogOut, FileSpreadsheet, Plus,
   Users, CheckCircle2, MessageSquare, Clipboard, Loader2,
-  Trash2, Eye, Share2, BarChart3, Edit, Calendar, AlertTriangle, HelpCircle
+  Trash2, Eye, Share2, BarChart3, Edit, Calendar, AlertTriangle, HelpCircle, Info, FileText, Check
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
+import { TEMPLATES_DATA, SurveyTemplate } from '@/lib/templates';
 
 export default function HomePage() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function HomePage() {
   const [ocrProgress, setOcrProgress] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [templateCategory, setTemplateCategory] = useState<'all' | 'edu' | 'student' | 'event' | 'business'>('all');
+  const [previewTemplate, setPreviewTemplate] = useState<SurveyTemplate | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Surveys Listing States
@@ -336,7 +339,7 @@ export default function HomePage() {
     }
   };
 
-  // Quick templates creation
+  // Quick templates creation from TEMPLATES_DATA (20 questions + intro)
   const handleCreateFromTemplate = async (templateName: string) => {
     if (!session) {
       toast("Vui lòng đăng nhập để lưu trữ khảo sát.", "info");
@@ -344,74 +347,45 @@ export default function HomePage() {
       return;
     }
 
-    let templateQuestions: any[] = [];
     let title = '';
+    let description = '';
     let isQuizTemplate = false;
+    let learningSettings: any = null;
+    let templateQuestions: any[] = [];
 
     if (templateName === 'Trang trắng') {
       title = generateMode === 'quiz' ? 'Bài tập chưa đặt tên' : 'Khảo sát chưa đặt tên';
-      templateQuestions = [];
+      description = 'Biểu mẫu tùy chỉnh được khởi tạo từ trang trắng.';
       isQuizTemplate = generateMode === 'quiz';
-    } else if (templateName === 'Đánh giá sự kiện' || templateName === 'Đánh giá Event') {
-      title = 'Khảo sát phản hồi Sự kiện';
       templateQuestions = [
-        { type: 'radio', text: 'Bạn cảm nhận như thế nào về sự kiện này?', options: ['Rất hài lòng', 'Hài lòng', 'Bình thường', 'Không hài lòng'], is_branching: false },
-        { type: 'checkbox', text: 'Hoạt động nào bạn thấy ấn tượng nhất? (Chọn nhiều)', options: ['Nội dung chia sẻ', 'Thời gian tổ chức', 'Hậu cần & tiệc ngọt', 'Hoạt động networking'], is_branching: false },
-        { type: 'voice', text: 'Ý kiến đóng góp thêm của bạn (nói hoặc gõ tiếng Việt)', options: [], is_branching: false }
-      ];
-    } else if (templateName === 'Khảo sát khách hàng') {
-      title = 'Khảo sát mức độ hài lòng khách hàng';
-      templateQuestions = [
-        { type: 'radio', text: 'Bạn có muốn tiếp tục sử dụng dịch vụ của chúng tôi không?', options: ['Có, chắc chắn', 'Không, cảm ơn'], is_branching: true, id: 'q1' },
-        { type: 'textarea', text: 'Lý do bạn không muốn sử dụng dịch vụ?', options: [], visibility: { condition_question_id: 'q1', condition_value: 'Không, cảm ơn' } },
-        { type: 'scale', text: 'Đánh giá chất lượng phục vụ của chúng tôi', options: [], is_branching: false }
-      ];
-    } else if (templateName === 'Bài tập trắc nghiệm' || templateName === 'Bài kiểm tra 10 câu') {
-      title = 'Bài kiểm tra Kiến thức tổng hợp';
-      isQuizTemplate = true;
-      templateQuestions = [
-        { type: 'radio', text: 'Thủ đô của Việt Nam là gì?', options: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'], correct_answer: 'Hà Nội', explanation: 'Hà Nội là thủ đô của Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.', is_branching: false },
-        { type: 'radio', text: '1 + 1 bằng mấy?', options: ['1', '2', '3', '4'], correct_answer: '2', explanation: 'Phép cộng cơ bản: 1 cộng 1 bằng 2.', is_branching: false },
-        { type: 'radio', text: 'Trí tuệ nhân tạo viết tắt là gì?', options: ['IA', 'AI', 'AR', 'VR'], correct_answer: 'AI', explanation: 'AI là viết tắt của Artificial Intelligence.', is_branching: false }
-      ];
-    } else if (templateName === 'Ôn tập Flashcard / Quiz') {
-      title = 'Bài ôn tập Quiz & Flashcard';
-      isQuizTemplate = true;
-      templateQuestions = [
-        { type: 'radio', text: 'Đơn vị đo cường độ dòng điện là gì?', options: ['Ampe (A)', 'Volt (V)', 'Watt (W)', 'Ohm (Ω)'], correct_answer: 'Ampe (A)', explanation: 'Cường độ dòng điện được đo bằng Ampe (A).', is_branching: false },
-        { type: 'radio', text: 'Hành tinh nào gần Mặt Trời nhất trong Hệ Mặt Trời?', options: ['Sao Thủy', 'Sao Kim', 'Trái Đất', 'Sao Hỏa'], correct_answer: 'Sao Thủy', explanation: 'Sao Thủy (Mercury) là hành tinh gần Mặt Trời nhất.', is_branching: false }
-      ];
-    } else if (templateName === 'Game Đố vui AI') {
-      title = 'Game Đố Vui Kiến Thức AI';
-      isQuizTemplate = true;
-      templateQuestions = [
-        { type: 'radio', text: 'Nước nào có diện tích lớn nhất thế giới?', options: ['Nga', 'Canada', 'Trung Quốc', 'Mỹ'], correct_answer: 'Nga', explanation: 'Nga là quốc gia có diện tích lớn nhất thế giới (~17.1 triệu km²).', is_branching: false },
-        { type: 'radio', text: 'Loài động vật có vú duy nhất biết bay là gì?', options: ['Dơi', 'Sóc bay', 'Chim bói cá', 'Đại bàng'], correct_answer: 'Dơi', explanation: 'Dơi là loài động vật có vú duy nhất có khả năng bay thực sự.', is_branching: false }
-      ];
-    } else if (templateName === 'Đề thi phân loại K12') {
-      title = 'Đề Thi Thử Phân Loại K12';
-      isQuizTemplate = true;
-      templateQuestions = [
-        { type: 'radio', text: 'Phương trình x^2 - 4 = 0 có các nghiệm là:', options: ['x = ±2', 'x = 2', 'x = 4', 'Vô nghiệm'], correct_answer: 'x = ±2', difficulty: 'medium', explanation: 'x^2 = 4 => x = ±2.', is_branching: false },
-        { type: 'radio', text: 'Thành phần chính của không khí là khí nào?', options: ['Nitơ (N2)', 'Oxi (O2)', 'Cacbonic (CO2)', 'Heli (He)'], correct_answer: 'Nitơ (N2)', difficulty: 'easy', explanation: 'Khí Nitơ chiếm khoảng 78% thể tích không khí.', is_branching: false }
+        {
+          type: 'radio',
+          text: generateMode === 'quiz' ? 'Câu 1: Nhập nội dung câu hỏi trắc nghiệm' : 'Câu 1: Nhập nội dung câu hỏi đầu tiên',
+          options: generateMode === 'quiz' ? ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D'] : ['Tùy chọn 1', 'Tùy chọn 2'],
+          correct_answer: generateMode === 'quiz' ? 'Đáp án A' : undefined,
+          is_required: true
+        }
       ];
     } else {
-      title = 'Khảo sát ý kiến nhân viên';
-      templateQuestions = [
-        { type: 'scale', text: 'Môi trường làm việc thân thiện, hòa đồng?', options: [], is_branching: false },
-        { type: 'radio', text: 'Bạn thuộc bộ phận nào?', options: ['Kỹ thuật', 'Kinh doanh', 'Nhân sự', 'Marketing'], is_branching: false }
-      ];
+      const matchedTmpl = TEMPLATES_DATA.find(t => t.name === templateName);
+      title = matchedTmpl ? matchedTmpl.name : (generateMode === 'quiz' ? 'Bài tập chưa đặt tên' : 'Khảo sát chưa đặt tên');
+      description = matchedTmpl ? matchedTmpl.fullIntro : 'Mẫu khảo sát khởi tạo nhanh.';
+      isQuizTemplate = matchedTmpl ? matchedTmpl.isQuiz : (generateMode === 'quiz');
+      learningSettings = matchedTmpl ? matchedTmpl.learningSettings : null;
+      templateQuestions = matchedTmpl ? matchedTmpl.questions : [];
     }
 
     setIsGenerating(true);
+    setPreviewTemplate(null);
     try {
       const saveRes = await fetch('/api/forms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
-          description: isQuizTemplate ? 'Mẫu bài tập trắc nghiệm học tập.' : 'Mẫu khảo sát khởi tạo nhanh.',
+          description,
           is_quiz: isQuizTemplate,
+          learning_settings: learningSettings,
           questions: templateQuestions
         })
       });
@@ -419,7 +393,7 @@ export default function HomePage() {
       const saveResult = await saveRes.json();
       if (!saveRes.ok) throw new Error(saveResult.error);
 
-      toast(`Khởi tạo mẫu ${templateName} thành công.`, "success");
+      toast(`Khởi tạo thành công ${templateName === 'Trang trắng' ? 'trang trắng' : `mẫu ${templateName}`}.`, "success");
       router.push(`/builder/${saveResult.formId}/edit`);
     } catch (err: any) {
       toast(`Lỗi tạo template: ${err.message}`, "error");
@@ -465,9 +439,9 @@ export default function HomePage() {
         generateMode === 'quiz' ? 'border-[#FFE4D6] bg-white/80 backdrop-blur-md' : 'border-[#E2E8F0] bg-white'
       }`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-          <img src="/logo.jpg" alt="hoiyAi Logo" className="h-11 w-11 object-contain rounded-xl border border-slate-100 shadow-sm" />
+          <img src="/logo.jpg" alt="Mustring.com Logo" className="h-11 w-11 object-contain rounded-xl border border-slate-100 shadow-sm" />
           <span className="font-black text-xl tracking-tight text-slate-900">
-            Hoiy<span className={generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'}>AI</span>
+            Mustring<span className={generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-accentIndigo'}>.com</span>
           </span>
         </div>
 
@@ -528,55 +502,41 @@ export default function HomePage() {
       {/* 2. Hero & AI Prompt Box Center */}
       <main className="flex-1 flex flex-col items-center justify-center max-w-4xl w-full mx-auto px-6 py-12">
         <div className="text-center mb-6">
-          <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold mb-3 transition-colors ${
-            generateMode === 'quiz' 
-              ? 'bg-[#FFF0E6] border border-[#FFD8C7] text-[#FF5733]' 
-              : 'bg-slate-100 border border-slate-200 text-slate-800'
-          }`}>
-            <Sparkles size={14} className={generateMode === 'quiz' ? 'text-[#FF5733]' : 'text-slate-700'} />
-            Hệ thống tạo khảo sát thông minh AI
+          <div className="flex items-center justify-center bg-slate-200/60 p-1 rounded-2xl mb-6 border border-slate-200 w-fit mx-auto">
+            <button
+              onClick={() => setGenerateMode('survey')}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition ${
+                generateMode === 'survey' ? 'bg-white text-accentIndigo shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <MessageSquare size={15} />
+              Tạo Khảo Sát Ý Kiến
+            </button>
+
+            <button
+              onClick={() => setGenerateMode('quiz')}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition ${
+                generateMode === 'quiz' ? 'bg-[#FF5733] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles size={15} />
+              Tạo Bài Tập Trắc Nghiệm 🎓
+            </button>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-slate-900">
-            {generateMode === 'quiz' ? 'Biến bài học thành trò chơi trong vài giây' : 'Tạo khảo sát chuyên nghiệp trong vài giây'}
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 mb-3 max-w-2xl mx-auto leading-tight">
+            {generateMode === 'quiz' ? (
+              <>Tạo <span className="text-[#FF5733]">Bài Tập Trắc Nghiệm</span> Học Tập Trong Vài Giây</>
+            ) : (
+              <>Tạo Khảo Sát & Thu Nhập Ý Kiến Thông Minh Bằng <span className="text-accentIndigo">Mustring AI</span></>
+            )}
           </h1>
 
           <p className="text-xs sm:text-sm text-textMuted max-w-lg mx-auto leading-relaxed">
             {generateMode === 'quiz'
               ? 'Kể AI nghe bạn muốn dạy gì, hoặc thả file bài giảng vào. AI sẽ tự dựng câu đố, chấm điểm và động viên học sinh liền tay.'
-              : 'Nhập prompt hoặc tải tài liệu Word, PDF hay hình ảnh. AI sẽ tự động dựng form, phân nhánh và dịch giọng nói.'}
+              : 'Tự động thiết kế biểu mẫu khảo sát chuyên nghiệp dành cho giảng viên, sinh viên, sự kiện và nghiên cứu thị trường.'}
           </p>
-        </div>
-
-        {/* Mode Switch Pill Component */}
-        <div className="flex justify-center mb-6">
-          <div className={`p-1.5 rounded-full border shadow-sm inline-flex items-center gap-1.5 transition-all ${
-            generateMode === 'quiz' ? 'bg-white border-[#FFE0D1]' : 'bg-white border-slate-200'
-          }`}>
-            <button
-              type="button"
-              onClick={() => setGenerateMode('survey')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold transition-all ${
-                generateMode === 'survey'
-                  ? 'bg-[#1E293B] text-white shadow-md'
-                  : 'bg-transparent text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <span>📋 Chuyên nghiệp</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setGenerateMode('quiz')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-extrabold transition-all ${
-                generateMode === 'quiz'
-                  ? 'bg-gradient-to-r from-[#FF6B4A] to-[#FF5733] text-white shadow-md shadow-orange-500/20'
-                  : 'bg-transparent text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <span>🎨 Học tập vui</span>
-            </button>
-          </div>
         </div>
 
         {/* AI Center Box */}
@@ -685,38 +645,138 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 3. Template strip */}
-        <div className="w-full mt-12">
-          <h2 className="text-xs font-bold text-textMuted uppercase tracking-wider mb-4 text-left">
-            TẠO NHANH (TEMPLATES)
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 w-full">
-            {(generateMode === 'quiz' ? [
-              { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số 0', bg: 'bg-orange-50 text-[#FF5733] border-orange-100' },
-              { name: 'Bài kiểm tra 10 câu', icon: CheckCircle2, desc: 'Bài kiểm tra có đáp án', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-              { name: 'Ôn tập Flashcard / Quiz', icon: Users, desc: 'Ôn thi & kiểm tra kiến thức', bg: 'bg-purple-50 text-purple-600 border-purple-100' },
-              { name: 'Game Đố vui AI', icon: HelpCircle, desc: 'Trò chơi kích thích học tập', bg: 'bg-amber-50 text-amber-600 border-amber-100' },
-              { name: 'Đề thi phân loại K12', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ', bg: 'bg-[#FFF0E6] text-[#FF5733] border-[#FFD8C7]' }
-            ] : [
-              { name: 'Trang trắng', icon: Plus, desc: 'Bắt đầu từ con số không', bg: 'bg-sky-50 text-sky-600 border-sky-100' },
-              { name: 'Đánh giá sự kiện', icon: CheckCircle2, desc: 'Mẫu hỏi sau sự kiện', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-              { name: 'Khảo sát khách hàng', icon: Users, desc: 'Khảo sát khách hàng', bg: 'bg-purple-50 text-purple-600 border-purple-100' },
-              { name: 'Bài tập trắc nghiệm', icon: HelpCircle, desc: 'Bài kiểm tra có đáp án', bg: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-              { name: 'Nhân sự', icon: FileSpreadsheet, desc: 'Thu thập ý kiến nội bộ', bg: 'bg-indigo-50 text-indigo-600 border-indigo-100' }
-            ]).map((tmpl, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleCreateFromTemplate(tmpl.name)}
-                disabled={isGenerating}
-                className="bg-white hover:shadow-md transition text-left border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col items-start w-full"
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 border ${tmpl.bg}`}>
-                  <tmpl.icon size={16} />
+        {/* Quick Template Strip */}
+        <div className="w-full my-10 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 border-b border-slate-200/80 pb-3 gap-4">
+            <div>
+              <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                MẪU TẠO NHANH CHUYÊN BIỆT
+              </h2>
+              <span className="text-[11px] font-semibold text-slate-500 block mt-0.5">
+                (2 mẫu / chủ đề)
+              </span>
+            </div>
+
+            {/* Template Category Tabs */}
+            <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end">
+              {[
+                { id: 'all', label: 'Tất cả' },
+                { id: 'edu', label: '🎓 Giảng viên' },
+                { id: 'student', label: '📚 Học sinh / Sinh viên' },
+                { id: 'event', label: '🎪 Sự kiện' },
+                { id: 'business', label: '💼 Doanh nghiệp' }
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setTemplateCategory(cat.id as any)}
+                  className={`px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap text-[11px] ${
+                    templateCategory === cat.id
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            {/* Blank Form Card */}
+            <div className="bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-md transition p-5 rounded-2xl shadow-sm flex flex-col justify-between items-start w-full group relative">
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center border bg-slate-100 text-slate-700 border-slate-200 group-hover:scale-105 transition-transform">
+                    <Plus size={18} />
+                  </div>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                    Tùy chọn
+                  </span>
                 </div>
-                <div className="font-bold text-xs text-textMain mb-1">{tmpl.name}</div>
-                <div className="text-[10px] text-textMuted leading-tight">{tmpl.desc}</div>
-              </button>
-            ))}
+
+                <h3 className="font-bold text-xs text-textMain mb-1.5 group-hover:text-accentIndigo transition-colors line-clamp-1">
+                  Trang trắng (Tùy chỉnh)
+                </h3>
+
+                <p className="text-[11px] text-textMuted leading-relaxed line-clamp-2 mb-4">
+                  Bắt đầu biểu mẫu khảo sát hoặc bài tập từ con số 0 theo ý bạn
+                </p>
+              </div>
+
+              <div className="w-full flex items-center justify-end pt-3 border-t border-slate-100">
+                <button
+                  onClick={() => handleCreateFromTemplate('Trang trắng')}
+                  disabled={isGenerating}
+                  className={`text-white font-bold py-1.5 px-3.5 rounded-xl text-[11px] transition flex items-center gap-1 shadow-xs ${
+                    generateMode === 'quiz'
+                      ? 'bg-[#FF5733] hover:bg-orange-600 shadow-orange-500/20'
+                      : 'bg-accentIndigo hover:bg-indigo-600 shadow-indigo-500/20'
+                  }`}
+                >
+                  Sử dụng <ArrowRight size={11} />
+                </button>
+              </div>
+            </div>
+
+            {TEMPLATES_DATA
+              .filter((t) => templateCategory === 'all' || t.category === templateCategory)
+              .map((tmpl) => (
+                <div
+                  key={tmpl.id}
+                  className="bg-white border border-slate-200/90 hover:border-slate-300 hover:shadow-md transition p-5 rounded-2xl shadow-sm flex flex-col justify-between items-start w-full group relative"
+                >
+                  <div className="w-full">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
+                        tmpl.category === 'edu' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        tmpl.category === 'student' ? 'bg-sky-50 text-sky-600 border-sky-100' :
+                        tmpl.category === 'event' ? 'bg-orange-50 text-[#FF5733] border-orange-100' :
+                        'bg-blue-50 text-blue-600 border-blue-100'
+                      }`}>
+                        <FileText size={18} />
+                      </div>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                        generateMode === 'quiz'
+                          ? 'bg-orange-50 text-[#FF5733] border-orange-100'
+                          : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                      }`}>
+                        20 câu
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-xs text-textMain mb-1.5 group-hover:text-accentIndigo transition-colors line-clamp-1">
+                      {tmpl.name}
+                    </h3>
+
+                    <p className="text-[11px] text-textMuted leading-relaxed line-clamp-2 mb-4">
+                      {tmpl.shortDesc}
+                    </p>
+                  </div>
+
+                  <div className="w-full flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => setPreviewTemplate(tmpl)}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 text-[11px] font-semibold"
+                      title="Xem chi tiết & giới thiệu mẫu"
+                    >
+                      <Info size={13} />
+                      <span>Chi tiết</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleCreateFromTemplate(tmpl.name)}
+                      disabled={isGenerating}
+                      className={`text-white font-bold py-1.5 px-3.5 rounded-xl text-[11px] transition flex items-center gap-1 shadow-xs ${
+                        generateMode === 'quiz'
+                          ? 'bg-[#FF5733] hover:bg-orange-600 shadow-orange-500/20'
+                          : 'bg-accentIndigo hover:bg-indigo-600 shadow-indigo-500/20'
+                      }`}
+                    >
+                      Sử dụng <ArrowRight size={11} />
+                    </button>
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -1203,6 +1263,95 @@ export default function HomePage() {
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold transition shadow-sm"
               >
                 Xóa vĩnh viễn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* TEMPLATE INTRODUCTION & PREVIEW MODAL */}
+      {previewTemplate && (
+        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-accentIndigo flex items-center justify-center font-bold">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-accentIndigo uppercase tracking-wider block">
+                    {previewTemplate.badge}
+                  </span>
+                  <h3 className="font-extrabold text-base text-slate-900 leading-tight">
+                    {previewTemplate.name}
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="text-slate-400 hover:text-slate-600 transition text-lg font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Template Info Content */}
+            <div className="space-y-4 text-xs">
+              {/* Introduction Card */}
+              <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl">
+                <h4 className="font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                  <Info size={14} className="text-accentIndigo" />
+                  Giới thiệu chi tiết mẫu:
+                </h4>
+                <p className="text-slate-600 leading-relaxed">
+                  {previewTemplate.fullIntro}
+                </p>
+              </div>
+
+              {/* Attributes Grid */}
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="bg-emerald-50/70 border border-emerald-100 p-3 rounded-xl">
+                  <span className="text-slate-500 block mb-0.5 font-medium">Quy mô câu hỏi:</span>
+                  <strong className="text-emerald-700 font-bold text-xs">{previewTemplate.questionCount} câu hỏi mẫu + Intro</strong>
+                </div>
+                <div className="bg-indigo-50/70 border border-indigo-100 p-3 rounded-xl">
+                  <span className="text-slate-500 block mb-0.5 font-medium">Đối tượng phù hợp:</span>
+                  <strong className="text-indigo-700 font-bold text-xs truncate block">{previewTemplate.targetAudience}</strong>
+                </div>
+              </div>
+
+              {/* Sample Questions Preview */}
+              <div>
+                <h4 className="font-bold text-slate-700 mb-2 flex items-center justify-between text-[11px]">
+                  <span>Mẫu các câu hỏi tiêu biểu:</span>
+                  <span className="text-slate-400 font-normal">(Hiển thị 4/{previewTemplate.questionCount} câu)</span>
+                </h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {previewTemplate.questions.slice(1, 5).map((q: any, idx: number) => (
+                    <div key={idx} className="bg-white border border-slate-200 p-2.5 rounded-xl text-[11px] text-slate-700">
+                      <span className="font-bold text-accentIndigo mr-1.5">[{q.type.toUpperCase()}]</span>
+                      {q.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Action Buttons */}
+            <div className="flex items-center justify-between pt-4 mt-5 border-t border-slate-100 text-xs">
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-4 py-2.5 rounded-xl transition"
+              >
+                Đóng
+              </button>
+
+              <button
+                onClick={() => handleCreateFromTemplate(previewTemplate.name)}
+                disabled={isGenerating}
+                className="bg-gradient-to-r from-accentIndigo to-accentViolet hover:opacity-95 text-white font-extrabold px-5 py-2.5 rounded-xl transition shadow-md shadow-indigo-500/20 flex items-center gap-1.5"
+              >
+                {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                Khởi tạo ngay mẫu 20 câu
               </button>
             </div>
           </div>

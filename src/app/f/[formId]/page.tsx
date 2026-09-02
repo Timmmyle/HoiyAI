@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { 
   Mic, MicOff, ChevronRight, ChevronLeft, Send, CheckCircle2, 
-  Loader2, Play, Volume2, AlertCircle, FileAudio, RotateCcw, Video, Target
+  Loader2, Play, Volume2, AlertCircle, FileAudio, RotateCcw, Video, Target,
+  Clock, Timer, Sparkles
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
@@ -49,6 +50,11 @@ export default function ResponderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Learning Settings & Timer States
+  const [learningSettings, setLearningSettings] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [timerActive, setTimerActive] = useState(false);
 
   // Voice recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -130,7 +136,30 @@ export default function ResponderPage() {
         setFormTitle(data.form.title);
         setFormDescription(data.form.description || '');
         setIsQuiz(data.form.is_quiz || false);
-        setQuestions(data.questions || []);
+        
+        const settings = data.form.learning_settings || null;
+        setLearningSettings(settings);
+
+        let loadedQuestions = data.questions || [];
+        if (settings?.shuffle_questions) {
+          loadedQuestions = [...loadedQuestions].sort(() => Math.random() - 0.5);
+        }
+        if (settings?.shuffle_answers) {
+          loadedQuestions = loadedQuestions.map((q: any) => {
+            if (Array.isArray(q.options) && q.options.length > 0) {
+              return { ...q, options: [...q.options].sort(() => Math.random() - 0.5) };
+            }
+            return q;
+          });
+        }
+        setQuestions(loadedQuestions);
+
+        // Timer initialization
+        if (settings?.timer_value && settings.timer_value > 0) {
+          const totalSecs = settings.timer_value * (settings.timer_type === 'per_question' ? loadedQuestions.length : 60);
+          setTimeLeft(totalSecs);
+          setTimerActive(true);
+        }
       } catch (err: any) {
         toast(err.message || 'Lỗi tải biểu mẫu khảo sát.', 'error');
       } finally {
@@ -142,6 +171,30 @@ export default function ResponderPage() {
       loadForm();
     }
   }, [formId]);
+
+  // Countdown Timer Effect
+  useEffect(() => {
+    if (!timerActive || timeLeft === null || isSubmitted || isSubmitting) return;
+
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      toast("Hết thời gian làm bài! Hệ thống đang tự động nộp bài...", "info");
+      handleSubmit();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timerActive, timeLeft, isSubmitted, isSubmitting]);
+
+  const formatTimeLeft = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remainderSecs = secs % 60;
+    return `${mins}:${remainderSecs < 10 ? '0' : ''}${remainderSecs}`;
+  };
 
   // Web Speech API initialization
   useEffect(() => {
@@ -717,6 +770,25 @@ export default function ResponderPage() {
 
   return (
     <div className="flex-1 flex flex-col max-w-xl w-full mx-auto px-6 py-12 justify-center">
+      {/* 0. Countdown Timer Bar (If enabled) */}
+      {timeLeft !== null && (
+        <div className={`mb-6 p-3.5 rounded-2xl border flex items-center justify-between shadow-sm transition-colors ${
+          timeLeft <= 60
+            ? 'bg-rose-50 border-rose-200 text-rose-700 animate-pulse'
+            : isQuiz
+            ? 'bg-orange-50 border-orange-200 text-[#FF5733]'
+            : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+        }`}>
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <Clock size={16} className={timeLeft <= 60 ? 'animate-spin' : ''} />
+            <span>Thời gian còn lại:</span>
+          </div>
+          <div className="font-mono font-black text-sm tracking-wider bg-white px-3 py-1 rounded-xl border border-current shadow-xs">
+            {formatTimeLeft(timeLeft)}
+          </div>
+        </div>
+      )}
+
       {/* 1. Header / Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center text-[10px] font-bold text-textMuted uppercase tracking-wider mb-2">
