@@ -26,7 +26,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     isQuiz: true,
     learningSettings: { timer_type: 'total', timer_value: 15, points_per_question: 5, shuffle_questions: true, shuffle_answers: true },
     questions: [
-      { type: 'info', text: 'HƯỚNG DẪN BÀI THI: Bài kiểm tra trắc nghiệm gồm 20 câu hỏi. Thời gian làm bài là 15 phút. Hệ thống tự động đếm ngược và nộp bài khi hết giờ.' },
+      { type: 'text', text: 'HƯỚNG DẪN BÀI THI: Bài kiểm tra trắc nghiệm gồm 20 câu hỏi. Thời gian làm bài là 15 phút. Hệ thống tự động đếm ngược và nộp bài khi hết giờ.' },
       { type: 'radio', text: 'Câu 1: Thủ đô của Việt Nam là thành phố nào?', options: ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'], correct_answer: 'Hà Nội', explanation: 'Hà Nội là thủ đô của Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.' },
       { type: 'radio', text: 'Câu 2: Thành phần chiếm tỷ lệ thể tích lớn nhất trong không khí là khí nào?', options: ['Nitơ (N2)', 'Oxi (O2)', 'Cacbonic (CO2)', 'Heli (He)'], correct_answer: 'Nitơ (N2)', explanation: 'Khí Nitơ chiếm khoảng 78% thể tích không khí.' },
       { type: 'radio', text: 'Câu 3: Thuật ngữ "AI" trong công nghệ là viết tắt của từ nào?', options: ['Artificial Intelligence', 'Automated Information', 'Advanced Integration', 'Application Interface'], correct_answer: 'Artificial Intelligence', explanation: 'AI viết tắt của Artificial Intelligence.' },
@@ -62,7 +62,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     questionCount: 20,
     isQuiz: false,
     questions: [
-      { type: 'info', text: 'GIỚI THIỆU KHẢO SÁT: Khảo sát nhằm nâng cao chất lượng giảng dạy. Mọi ý kiến phản hồi của sinh viên đều hoàn toàn ẩn danh và bảo mật.' },
+      { type: 'text', text: 'GIỚI THIỆU KHẢO SÁT: Khảo sát nhằm nâng cao chất lượng giảng dạy. Mọi ý kiến phản hồi của sinh viên đều hoàn toàn ẩn danh và bảo mật.' },
       { type: 'radio', text: 'Câu 1: Bạn hiện đang là sinh viên năm thứ mấy?', options: ['Năm thứ nhất', 'Năm thứ hai', 'Năm thứ ba', 'Năm thứ tư / Học viên'] },
       { type: 'scale', text: 'Câu 2: Đánh giá mức độ hài lòng tổng thể của bạn về môn học này (1 - Rất kém, 5 - Rất tốt)' },
       { type: 'scale', text: 'Câu 3: Nội dung môn học bám sát đề cương chi tiết và đáp ứng mục tiêu đề ra (1-5)' },
@@ -98,7 +98,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     questionCount: 20,
     isQuiz: false,
     questions: [
-      { type: 'info', text: 'GIỚI THIỆU ĐỀ TÀI: Bảng khảo sát phục vụ Đề tài Nghiên cứu Khoa học về Các yếu tố ảnh hưởng đến Ý định sử dụng dịch vụ thông minh. Rất mong bạn dành 3 phút thực hiện.' },
+      { type: 'text', text: 'GIỚI THIỆU ĐỀ TÀI: Bảng khảo sát phục vụ Đề tài Nghiên cứu Khoa học về Các yếu tố ảnh hưởng đến Ý định sử dụng dịch vụ thông minh. Rất mong bạn dành 3 phút thực hiện.' },
       { type: 'radio', text: 'Câu 1: Độ tuổi của bạn:', options: ['Dưới 18 tuổi', '18 - 22 tuổi', '23 - 30 tuổi', 'Trên 30 tuổi'] },
       { type: 'radio', text: 'Câu 2: Giới tính:', options: ['Nam', 'Nữ', 'Khác / Không tiết lộ'] },
       { type: 'radio', text: 'Câu 3: Nghề nghiệp hiện tại:', options: ['Học sinh / Sinh viên', 'Nhân viên văn phòng', 'Kinh doanh tự do', 'Khác'] },
@@ -135,7 +135,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     isQuiz: true,
     learningSettings: { learning_mode: 'practice', practice_mode: true },
     questions: [
-      { type: 'info', text: 'CHẾ ĐỘ TỰ LUYỆN: Bộ câu hỏi trắc nghiệm ôn tập. Sau khi chọn đáp án, hệ thống sẽ hiển thị ngay đáp án đúng kèm giải thích chi tiết.' },
+      { type: 'text', text: 'CHẾ ĐỘ TỰ LUYỆN: Bộ câu hỏi trắc nghiệm ôn tập. Sau khi chọn đáp án, hệ thống sẽ hiển thị ngay đáp án đúng kèm giải thích chi tiết.' },
       { type: 'radio', text: 'Câu 1: Đơn vị đo tần số trong hệ SI là gì?', options: ['Hertz (Hz)', 'Watt (W)', 'Joule (J)', 'Pascal (Pa)'], correct_answer: 'Hertz (Hz)', explanation: 'Tần số đo bằng Hertz (Hz).' },
       { type: 'radio', text: 'Câu 2: Trong Tiếng Anh, từ trái nghĩa với "Generous" là:', options: ['Mean / Stingy', 'Kind', 'Polite', 'Brave'], correct_answer: 'Mean / Stingy', explanation: 'Generous (Rộng lượng) >< Mean/Stingy (Keo kiệt).' },
       { type: 'radio', text: 'Câu 3: Axit nào có trong dạ dày con người hỗ trợ tiêu hóa?', options: ['Axit Clohidric (HCl)', 'Axit Sunfuric (H2SO4)', 'Axit Axetic (CH3COOH)', 'Axit Nitric (HNO3)'], correct_answer: 'Axit Clohidric (HCl)', explanation: 'Dạ dày chứa dung dịch HCl nồng độ ~0.001 - 0.01M.' },
@@ -172,7 +172,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     isQuiz: false,
     learningSettings: { max_responses: 50 },
     questions: [
-      { type: 'info', text: 'ĐĂNG KÝ VÉ SỰ KIỆN: Vui lòng hoàn thành form đăng ký dưới đây để nhận Mã vé QR tham dự Workshop.' },
+      { type: 'text', text: 'ĐĂNG KÝ VÉ SỰ KIỆN: Vui lòng hoàn thành form đăng ký dưới đây để nhận Mã vé QR tham dự Workshop.' },
       { type: 'text', text: 'Câu 1: Họ và tên người tham dự' },
       { type: 'text', text: 'Câu 2: Số điện thoại nhận mã xác nhận Zalo' },
       { type: 'text', text: 'Câu 3: Địa chỉ Email nhận Mã vé QR' },
@@ -208,7 +208,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     questionCount: 20,
     isQuiz: false,
     questions: [
-      { type: 'info', text: 'CẢM ƠN BẠN ĐÃ THAM GIA: Ý kiến đóng góp của bạn giúp Ban tổ chức nâng cấp chất lượng cho các kỳ sự kiện tiếp theo.' },
+      { type: 'text', text: 'CẢM ƠN BẠN ĐÃ THAM GIA: Ý kiến đóng góp của bạn giúp Ban tổ chức nâng cấp chất lượng cho các kỳ sự kiện tiếp theo.' },
       { type: 'scale', text: 'Câu 1: Đánh giá độ hài lòng chung của bạn về sự kiện hôm nay (1 - Rất kém, 5 - Rất tốt)' },
       { type: 'scale', text: 'Câu 2: Chất lượng nội dung chia sẻ của các Diễn giả (1-5)' },
       { type: 'scale', text: 'Câu 3: Phong cách truyền đạt và khả năng tương tác của Diễn giả (1-5)' },
@@ -244,7 +244,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     questionCount: 20,
     isQuiz: false,
     questions: [
-      { type: 'info', text: 'KHẢO SÁT THỊ TRƯỜNG: Ý kiến của bạn đóng vai trò quyết định giúp chúng tôi nghiên cứu phát triển sản phẩm mới đáp ứng tốt nhất nhu cầu người dùng.' },
+      { type: 'text', text: 'KHẢO SÁT THỊ TRƯỜNG: Ý kiến của bạn đóng vai trò quyết định giúp chúng tôi nghiên cứu phát triển sản phẩm mới đáp ứng tốt nhất nhu cầu người dùng.' },
       { type: 'radio', text: 'Câu 1: Tần suất bạn sử dụng nhóm sản phẩm dịch vụ này hiện tại:', options: ['Hàng ngày', 'Hàng tuần', 'Hàng tháng', 'Hiếm khi sử dụng'] },
       { type: 'radio', text: 'Câu 2: Bạn thường mua/sử dụng sản phẩm qua kênh nào?', options: ['Cửa hàng trực tiếp', 'Sàn E-commerce (Shopee/Lazada)', 'Website chính hãng', 'Mạng xã hội TikTok/FB'] },
       { type: 'checkbox', text: 'Câu 3: Yếu tố quan trọng nhất khi bạn lựa chọn sản phẩm (Chọn 3):', options: ['Chất lượng sản phẩm', 'Giá cả hợp lý', 'Thương hiệu uy tín', 'Dịch vụ hậu mãi / Bảo hành', 'Khuyến mãi hấp dẫn', 'Mẫu mã thiết kế đẹp'] },
@@ -280,7 +280,7 @@ export const TEMPLATES_DATA: SurveyTemplate[] = [
     questionCount: 20,
     isQuiz: false,
     questions: [
-      { type: 'info', text: 'KHẢO SÁT TRẢI NGHIỆM KHÁCH HÀNG: Cảm ơn bạn đã tin tưởng dịch vụ! Hãy dành 2 phút đánh giá trải nghiệm để giúp chúng tôi phục vụ tốt hơn.' },
+      { type: 'text', text: 'KHẢO SÁT TRẢI NGHIỆM KHÁCH HÀNG: Cảm ơn bạn đã tin tưởng dịch vụ! Hãy dành 2 phút đánh giá trải nghiệm để giúp chúng tôi phục vụ tốt hơn.' },
       { type: 'scale', text: 'Câu 1: [NPS] Từ 1 đến 10, khả năng bạn giới thiệu thương hiệu của chúng tôi cho đồng nghiệp/bạn bè là bao nhiêu?' },
       { type: 'scale', text: 'Câu 2: [CSAT] Mức độ hài lòng tổng thể của bạn đối với đơn hàng / dịch vụ vừa trải nghiệm (1-5)' },
       { type: 'scale', text: 'Câu 3: Thái độ phục vụ và sự chuyên nghiệp của nhân viên tư vấn / CSKH (1-5)' },

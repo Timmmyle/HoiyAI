@@ -119,6 +119,18 @@ export async function POST(req: NextRequest) {
         };
       });
 
+      const ALLOWED_TYPES = ['radio', 'checkbox', 'text', 'scale', 'dropdown', 'date', 'file', 'voice'];
+      const normalizeQuestionType = (type: any): string => {
+        const t = String(type || '').toLowerCase().trim();
+        if (t === 'textarea' || t === 'info' || t === 'long_text' || t === 'paragraph') return 'text';
+        if (t === 'quiz_radio' || t === 'single') return 'radio';
+        if (t === 'multiple') return 'checkbox';
+        if (t === 'rating') return 'scale';
+        if (t === 'select') return 'dropdown';
+        if (ALLOWED_TYPES.includes(t)) return t;
+        return 'text';
+      };
+
       // Pass 2: Map conditions and build insert payload
       const payload = preparedQuestions.map((q: any, index: number) => {
         let finalConditionId = null;
@@ -130,7 +142,7 @@ export async function POST(req: NextRequest) {
         return {
           id: q.id,
           form_id: form.id,
-          type: q.type,
+          type: normalizeQuestionType(q.type),
           text: q.text,
           options: q.options || [],
           correct_answer: q.correct_answer || null,
