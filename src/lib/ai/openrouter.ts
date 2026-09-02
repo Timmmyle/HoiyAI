@@ -120,6 +120,95 @@ export async function generateFormFromText(text: string, tier = 'FREE', isQuiz =
     ? ['gemini-2.5-flash-lite', 'gpt-5-nano']
     : MODEL_CHAIN;
 
+  const cleanInput = text.trim();
+  const rawLines = cleanInput.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Check if text has explicit multi-question headers (e.g. "Câu 1:", "Câu 2:", "1.", "2.")
+  const hasMultipleQuestions = (cleanInput.match(/(?:Câu\s*\d+|\bQ\d+\b|\b\d+\s*[\.\)]\s+\w+)/gi) || []).length >= 2;
+
+  // Determine if input is a generative prompt instruction rather than a pre-formatted document
+  const isGenerativePrompt = !hasMultipleQuestions && (
+    cleanInput.length < 1500 ||
+    rawLines.length <= 5 ||
+    /^(tạo|làm|sinh|thiết kế|xây dựng|viết|hãy|cần|cho|generate|create)/i.test(cleanInput) ||
+    /(\b\d+\s*câu\b|\bkhảo sát\b|\bbài tập\b|\bđề thi\b)/i.test(cleanInput)
+  );
+
+  // --- PROMPT GENERATION MODE ---
+  if (isGenerativePrompt) {
+    console.log(`[AI Generator] Prompt Mode activated for input: "${cleanInput.substring(0, 100)}..."`);
+    
+    // Extract target question count if requested (e.g. "20 câu", "10 câu", "15 câu")
+    const matchCount = cleanInput.match(/(\d+)\s*câu/i);
+    const targetQuestionCount = matchCount ? parseInt(matchCount[1], 10) : 10;
+
+    const userPrompt = `Nhiệm vụ: Hãy tự động sáng tạo và thiết kế một ${isQuiz ? 'bài tập trắc nghiệm học tập' : 'bản khảo sát ý kiến'} hoàn chỉnh bằng tiếng Việt dựa trên yêu cầu dưới đây.
+
+YÊU CẦU CỦA NGƯỜI DÙNG:
+"${cleanInput}"
+
+BẮT BUỘC THỰC HIỆN:
+1. SỐ LƯỢNG CÂU HỎI: Bạn BẮT BUỘC phải sinh chính xác ${targetQuestionCount} câu hỏi (mảng "questions" có đúng ${targetQuestionCount} phần tử). Các câu hỏi phải đa dạng, chất lượng, đi từ tổng quan đến chi tiết bám sát chủ đề người dùng yêu cầu!
+2. CÁC LOẠI CÂU HỎI: Đa dạng các loại câu hỏi như "radio" (trắc nghiệm 1 đáp án), "checkbox" (chọn nhiều đáp án), "scale" (thang đo 1-5), "text" (nhập tự do), "voice" (phản hồi giọng nói).
+${isQuiz ? '3. Vì đây là Bài tập trắc nghiệm (Quiz), các câu hỏi trắc nghiệm radio/checkbox BẮT BUỘC phải có trường "correct_answer" và "explanation" (giải thích đáp án).' : '3. Với các câu hỏi khảo sát trắc nghiệm, tạo 4-5 lựa chọn đáp án bám sát thực tế.'}
+4. TRẢ VỀ JSON DUY NHẤT: Tuân thủ chính xác cấu trúc JSON sau (không thêm markdown ngoài JSON):
+{
+  "form_title": "[Tiêu đề bài khảo sát / bài tập]",
+  "ai_summary": "[Tóm tắt 1-2 câu về cấu trúc bài khảo sát đã tạo]",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "radio",
+      "text": "[Nội dung câu hỏi 1]",
+      "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "is_branching": false,
+      "correct_answer": "Đáp án A",
+      "explanation": "Giải thích chi tiết..."
+    }
+  ]
+}`;
+
+    for (const model of activeModelChain) {
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          console.log(`[AI Generator Prompt Mode] Attempting model ${model}...`);
+          const response = await client.chat.completions.create({
+            model,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT_SCHEMA },
+              { role: 'user', content: userPrompt }
+            ]
+          });
+
+          const content = response.choices[0]?.message?.content;
+          if (content) {
+            const parsed = tryParseJSON(content);
+            const questionsList = parsed?.questions || parsed?.questions_list || parsed?.action?.parameters?.questions_list;
+            if (parsed && Array.isArray(questionsList) && questionsList.length > 0) {
+              const formattedQuestions = questionsList.map((q: any, idx: number) => ({
+                ...q,
+                id: `q${idx + 1}`
+              }));
+
+              return {
+                data: {
+                  form_title: parsed.form_title || (isQuiz ? 'Bài tập trắc nghiệm học tập' : 'Khảo sát ý kiến thông minh'),
+                  ai_summary: parsed.ai_summary || `Đã sinh tự động ${formattedQuestions.length} câu hỏi theo yêu cầu.`,
+                  questions: formattedQuestions
+                },
+                usedModel: model
+              };
+            }
+          }
+        } catch (err: any) {
+          console.warn(`[AI Generator Prompt Mode] Warning with model ${model}:`, err.message);
+        }
+        retries--;
+      }
+    }
+  }
+
   interface DetectedQuestion {
     id: string;
     originalText: string;
